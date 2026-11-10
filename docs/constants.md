@@ -8,6 +8,10 @@
 | `LogRiver.CENTERS {-0,7; 0,7; 0}`, `PHASES {0; π/2; 0}`, `SHIFTS {-2; 2; 0}`, `SWAYS {0,3; 0,3; 0}`, `WAVELENGTH 70`, `GAP_MIN 12`, `GAP_MAX 36` (ряды брёвен подобраны под реку «Ромашковой Долины»: «правка рядов по просьбе пользователя 2026-11-04») | поле маршрута `lanes[]` (`center`, `phase`, `shift`, `sway`), `wavelength`, `gap_min`, `gap_max` в `data/gameplaymod/log_routes.dat`; без них мод пускает один ряд по средней линии | `raft/LogRoute.Flow`, `LogRoutes.Entry`; значения реки записаны в мир `SmesharikiWorldMod/tools/log_routes_dat.py` (`DEFAULT_FLOW`) |
 | `SUN_BOOST 6,25`, `GUIDE_LIGHT 0,9`, `GUIDE_DARK 0,25`, `AMBIENT_LIGHT 0,9`, `AMBIENT_DARK 0,3` (яркость неба и приглушение света) | в SmesharikiWorldMod («отображение») | `world/mixin/LightmapRenderStateExtractorMixin`, `world/ViewLight` |
 
+| `Barrages.SLOW_MARGIN` 10, `SLOW_RECOVERY` 3; умолчания маркера `minSpeed` 5, `grace` 10; `BarrageEntity.DEFAULT_DENSITY` (профиль погони) — строгость обстрела «только за торможение» (2026-11-10, по просьбе: «убрать константы сложности погони») | поля маркера `SlowMargin`, `SlowRecovery`, `MinSpeed`, `Grace`, `Density` в данных маркера (`/data`); умолчания мода нейтральные: стрелы всегда (`minSpeed` 0), `grace` 0, `slowMargin` 0, `slowRecovery` 1, `Density` `{1}` (1 стрела/с со всех сторон) | `barrage/BarrageEntity`, `Barrages.provoked`; 55 маркеров вашего мира дополнены скриптом `SmesharikiWorldMod/tools/barrage_fields.py` (резерв `~/.minecraft/backups/до_параметров_обстрела_2026-11-10/`), `chase_arrows.py` пишет поля сам |
+
+Не сложность и оставлено в коде: `Barrages.RISE` 0,6 (стрела появляется чуть выше цели, иначе цепляет неровности земли), `MIN_FLIGHT` 2,5 (не ближе к стене), `MAX_ARROWS` 256 и `ARROW_TICKS` 100 (защита от лагов), `DRAG`, `GRAVITY`, `VELOCITY_*` (физика и измерение скорости).
+
 ## Осталось и подобрано под уровень (кандидаты на вынос в данные)
 | Константа | Значение | Файл | Под что подобрана (по CLAUDE.md и комментариям в коде) |
 |---|---|---|---|
@@ -15,8 +19,6 @@
 | `BalloonEntity.SINK` | 0,5/20 | там же | «шар сам опускается»: топливо нужно, чтобы держать высоту; баланс полёта уровня |
 | `BalloonRopeItem.MAX_FUEL` | 256 (было 128) | `raft/BalloonRopeItem` | хватает на весь маршрут уровня; прочность предмета связана |
 | `BalloonEntity.MAX_BLOCKS` / `Rafts.MAX_BLOCKS` | 600 / 300 | `raft/` | размеры построек уровня |
-| `BarrageEntity.DEFAULT_DENSITY` | `{0,0,0.2,0.4,0.6,0.6,0.6,0.6,0.6,0.4,0.2,0}` | `barrage/BarrageEntity` | профиль «погони»; у маркера переопределяется через `/data` (`Density`) |
-| `Barrages.RISE` 0,6, `MIN_FLIGHT` 2,5, `MAX_ARROWS` 256, `ARROW_TICKS` 100, `SLOW_MARGIN` 10, `SLOW_RECOVERY` 3 | — | `barrage/Barrages` | «обстрел только за торможение», «чуть жёстче» (правки 2026-11-08 по жалобам на сложность) |
 | `LavaWaveEntity.LAVA_TOP` 8/9, `RISE_TICKS` 20, `CRASH_TICKS` 12, `PULL` 0,12, `MAX_PULL` 0,25 | — | `lava/LavaWaveEntity` | вид и темп волны в пещере |
 | `RaftEntity.LAVA_SUNK` 0,4, `LAVA_HOLD` 40 | — | `raft/RaftEntity` | «плоты тонут при обрушении волны лавы» |
 | `RaftEntity.SPEED` 6,66/20; `Currents.SPEED` 10/20; `LogRoute.FALL_WEIGHT` 0,5 | — | `raft/`, `current/` | скорость реки под прыжки по брёвнам |
