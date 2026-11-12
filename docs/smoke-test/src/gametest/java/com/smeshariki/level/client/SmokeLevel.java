@@ -20,6 +20,12 @@ public class SmokeLevel {
 			m1.checkpoints.add(c);
 		}
 		for (int i = 0; i < 12; i++) d.rules.add(new LevelDraft.MechanicRule());
+		for (int i = 0; i < 6; i++) m1.rules.add(new LevelDraft.MechanicRule());
+		if (!m1.checkpoints.isEmpty()) {
+			LevelDraft.CheckpointDraft cp = m1.checkpoints.get(0);
+			for (String id : new String[] {"minecraft:stone", "minecraft:dirt", "minecraft:water", "minecraft:oak_log", "minecraft:glass"}) cp.resets.add(new com.smeshariki.level.task.ResetCell(com.smeshariki.level.task.ResetCell.Kind.BLOCK, net.minecraft.resources.Identifier.parse(id)));
+			cp.resets.add(new com.smeshariki.level.task.ResetCell(com.smeshariki.level.task.ResetCell.Kind.ENTITY, net.minecraft.resources.Identifier.parse("minecraft:cow")));
+		}
 		for (int i = 0; i < 12; i++) {
 			LevelDraft.WatchDraft w = new LevelDraft.WatchDraft();
 			w.id = "w" + i;
@@ -44,7 +50,9 @@ public class SmokeLevel {
 			mc.gui.setScreen(new TaskEditorScreen(d));
 		}));
 		out.add(new Case("level.checkpoints", mc -> mc.gui.setScreen(new CheckpointsScreen(d, m1))));
+		out.add(new Case("level.checkpoint", mc -> mc.gui.setScreen(new CheckpointScreen(null, m1.checkpoints.get(0), 1))));
 		out.add(new Case("level.rules", mc -> mc.gui.setScreen(new MechanicRulesScreen(d))));
+		out.add(new Case("level.rules_mission", mc -> mc.gui.setScreen(new MechanicRulesScreen(d, m1))));
 		out.add(new Case("level.watches", mc -> mc.gui.setScreen(new WatchesScreen(d))));
 		out.add(new Case("level.conditions", mc -> mc.gui.setScreen(new ConditionsScreen(Component.literal("задача"), conditions, () -> { }))));
 		out.add(new Case("level.picker", mc -> mc.gui.setScreen(new LocationPickerScreen(null, false, name -> { }))));

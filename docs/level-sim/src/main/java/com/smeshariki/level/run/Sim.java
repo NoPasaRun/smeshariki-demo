@@ -15,9 +15,11 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.gson.JsonParser;
 import com.smeshariki.gameplay.api.Mechanics;
+import com.smeshariki.level.definition.LevelAction;
 import com.smeshariki.level.definition.LevelDefinition;
 import com.smeshariki.level.definition.LevelEvent;
 import com.smeshariki.level.definition.Levels;
+import com.smeshariki.level.task.Checkpoint;
 import com.smeshariki.level.task.TaskArea;
 
 import net.minecraft.SharedConstants;
@@ -37,6 +39,7 @@ public final class Sim {
 	static final UUID K = UUID.fromString("00000000-0000-0000-0000-00000000000a"), Y = UUID.fromString("00000000-0000-0000-0000-00000000000b");
 
 	static int failures, checks;
+	static String LEVEL_FILE;
 
 	static void check(String what, boolean ok) {
 		checks++;
@@ -56,7 +59,9 @@ public final class Sim {
 		final Map<UUID, Integer> returns = new HashMap<>();
 		final Map<UUID, Vec3> lastReturn = new HashMap<>();
 		final Map<UUID, List<Integer>> freezes = new HashMap<>();
-		int publishes, snaps;
+		int publishes, snaps, cellSaves;
+		final List<Integer> cellsSavedSizes = new ArrayList<>();
+		final List<Integer> cellsRestored = new ArrayList<>();
 		final List<Integer> restoredN = new ArrayList<>();
 
 		static String key(UUID p, Identifier id) {
@@ -159,6 +164,20 @@ public final class Sim {
 		}
 
 		@Override
+		public CompoundTag saveCells(TaskArea area, List<com.smeshariki.level.task.ResetCell> cells) {
+			CompoundTag tag = new CompoundTag();
+			tag.putInt("c", ++cellSaves);
+			cellsSavedSizes.add(cells.size());
+			return tag;
+		}
+
+		@Override
+		public void restoreCells(TaskArea area, CompoundTag cells) {
+			cellsRestored.add(cells.getIntOr("c", -1));
+			log.add("restoreCells " + cells.getIntOr("c", -1));
+		}
+
+		@Override
 		public void prepareBlocks(TaskArea area) {
 		}
 
@@ -227,9 +246,13 @@ public final class Sim {
 	}
 
 	static LevelDefinition load(String file) throws Exception {
+		return loadText(Files.readString(Path.of(file)));
+	}
+
+	static LevelDefinition loadText(String source) throws Exception {
 		Set<String> missing = new java.util.TreeSet<>();
 		// реестры мода без игры не заполнить: персонажей и предметы заменяем ванильными, логике прогона их имена безразличны
-		String text = Files.readString(Path.of(file)).replace("gameplaymod:krosh_tailed", "minecraft:cow").replace("gameplaymod:yozhik", "minecraft:pig")
+		String text = source.replace("gameplaymod:krosh_tailed", "minecraft:cow").replace("gameplaymod:yozhik", "minecraft:pig")
 				.replace("gameplaymod:tarzan_rope", "minecraft:stick").replace("gameplaymod:glasses", "minecraft:stick");
 		var parsed = Levels.parse(JsonParser.parseString(text), store(), missing);
 		if (parsed.level() == null) throw new IllegalStateException("уровень не разобран: " + parsed.problems());
@@ -577,6 +600,132 @@ public final class Sim {
 		check("после skip уровень идёт дальше нормально: текущая миссия jungle", r3.currentMission() != null && r3.currentMission().id().equals("jungle"));
 	}
 
+	/** Уровень из файла с правкой JSON (для сценариев про события и ячейки миссии). */
+	static LevelDefinition edited(java.util.function.Consumer<com.google.gson.JsonObject> change) throws Exception {
+		com.google.gson.JsonObject json = JsonParser.parseString(Files.readString(Path.of(LEVEL_FILE))).getAsJsonObject();
+		change.accept(json);
+		return loadText(json.toString());
+	}
+
+	static com.google.gson.JsonObject missionJson(com.google.gson.JsonObject level, String id) {
+		for (var m : level.getAsJsonArray("missions")) if (m.getAsJsonObject().get("id").getAsString().equals(id)) return m.getAsJsonObject();
+		throw new IllegalArgumentException(id);
+	}
+
+	static com.google.gson.JsonObject trigger(String json) {
+		return JsonParser.parseString(json).getAsJsonObject();
+	}
+
+	static void toCave(LevelRun run) {
+		for (int i = 0; i < 4 && !(run.currentMission() != null && run.currentMission().id().equals("cave")); i++) run.skipMission();
+	}
+
+	static void scenario13(LevelDefinition def) throws Exception {
+		System.out.println("S13 триггеры уровня переложены в миссии (миграция)");
+		var byMission = new java.util.LinkedHashMap<String, Integer>();
+		for (var m : def.missions()) byMission.put(m.id(), m.triggers().size());
+		System.out.println("      триггеров в миссиях: " + byMission);
+		check("morning без триггеров, flight 5, jungle 2, cave 7, chase 0", byMission.get("morning") == 0 && byMission.get("flight") == 5 && byMission.get("jungle") == 2 && byMission.get("cave") == 7 && byMission.get("chase") == 0);
+		long levelOwn = def.triggers().stream().filter(t -> def.triggerOwner(t).isEmpty() && t.then().stream().anyMatch(a -> a instanceof LevelAction.PlayCutscene)).count();
+		check("в уровне остался заставочный триггер level_started", levelOwn == 1);
+		check("волна лавы не осталась в уровне", def.triggers().stream().filter(t -> def.triggerOwner(t).isEmpty()).noneMatch(t -> t.then().stream().anyMatch(a -> a instanceof LevelAction.Mechanic(var id, var args) && id.getPath().equals("lava_wave"))));
+		check("цепочка волн (lava1→lava2→lava3) в cave", def.missions().stream().filter(m -> m.id().equals("cave")).findFirst().orElseThrow().triggers().stream().filter(t -> t.when().stream().anyMatch(e -> e.subject().startsWith("gameplaymod:lava_wave_finished") || e.subject().startsWith("lava_wave_finished"))).count() == 3);
+		var raw = JsonParser.parseString(Files.readString(Path.of(LEVEL_FILE)));
+		var once = com.smeshariki.level.definition.LegacyTriggers.migrate(raw);
+		check("повторная миграция ничего не меняет", once.equals(com.smeshariki.level.definition.LegacyTriggers.migrate(once)));
+		var problems = com.smeshariki.level.definition.LevelAnalyzer.analyze(def, id -> 0, 2).problems();
+		System.out.println("      проблемы анализатора: " + problems);
+		check("анализатор: нет ошибок области видимости", problems.stream().noneMatch(pr -> pr.startsWith("триггер миссии")));
+	}
+
+	static void scenario14(LevelDefinition def) {
+		System.out.println("S14 события миссии работают только в её рамках (до начала и после конца — нет)");
+		Host h = new Host();
+		LevelRun run = start(def, h);
+		LevelEvent finished1 = LevelEvent.external("gameplaymod:lava_wave_finished:lava1");
+		int base = (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+		run.external(finished1);
+		int before = (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+		check("до начала миссии cave событие волны не запускает lava2", before == base);
+		toCave(run);
+		check("идёт cave", run.currentMission() != null && run.currentMission().id().equals("cave"));
+		run.external(finished1);
+		int during = (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+		check("пока cave идёт, конец lava1 запускает lava2", during == before + 1);
+		run.skipMission();
+		int afterEnd = (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+		run.external(finished1);
+		int after = (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+		check("после конца cave событие волны ничего не запускает", after == afterEnd);
+		// триггер миссии, ждущий её собственный конец, сработал (mission_completed:jungle → автобег выключен)
+		check("свой mission_completed доходит до триггера миссии (jungle выключил автобег)", h.count("mission_completed:jungle") == 1);
+	}
+
+	static void scenario15(LevelDefinition ignored) throws Exception {
+		System.out.println("S15 ячейки отката, действие при входе, события «вход в чекпоинт» и «откат на чекпоинт»");
+		LevelDefinition def = edited(level -> {
+			var cave = missionJson(level, "cave");
+			var cps = cave.getAsJsonArray("checkpoints");
+			var first = new com.google.gson.JsonObject();
+			first.add("at", cps.get(0));
+			first.add("reset", JsonParser.parseString("[{\"kind\":\"block\",\"type\":\"minecraft:dirt\"}]"));
+			var second = new com.google.gson.JsonObject();
+			second.add("at", cps.get(1));
+			second.add("reset", JsonParser.parseString("[{\"kind\":\"block\",\"type\":\"minecraft:stone\"},{\"kind\":\"entity\",\"type\":\"minecraft:cow\"}]"));
+			second.add("on_enter", JsonParser.parseString("{\"action\":\"gameplaymod:lava_wave\",\"group\":\"cpwave\"}"));
+			var rebuilt = new com.google.gson.JsonArray();
+			rebuilt.add(first);
+			rebuilt.add(second);
+			rebuilt.add(cps.get(2));
+			cave.add("checkpoints", rebuilt);
+			if (!cave.has("triggers")) cave.add("triggers", new com.google.gson.JsonArray());
+			var triggers = cave.getAsJsonArray("triggers");
+			triggers.add(trigger("{\"when\":\"checkpoint_reached:cave:2\",\"then\":{\"action\":\"emit\",\"event\":\"cp2\"}}"));
+			triggers.add(trigger("{\"when\":\"checkpoint_reset:cave:2\",\"repeat\":true,\"then\":{\"action\":\"emit\",\"event\":\"cp2_reset\"}}"));
+			triggers.add(trigger("{\"when\":\"checkpoint_reset:cave:1\",\"repeat\":true,\"then\":{\"action\":\"emit\",\"event\":\"cp1_reset\"}}"));
+		});
+		Checkpoint cp2 = def.missions().stream().filter(m -> m.id().equals("cave")).findFirst().orElseThrow().checkpoints().get(1);
+		check("чекпоинт разобран: 2 ячейки и действие при входе", cp2.resets().size() == 2 && cp2.onEnter().isPresent());
+		Host h = new Host();
+		LevelRun run = start(def, h);
+		toCave(run);
+		tick(run, 2);
+		check("в начале cave запомнены ячейки первого чекпоинта (1 ячейка)", h.cellsSavedSizes.contains(1));
+		int waves = (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+		h.cellsSavedSizes.clear();
+		at(h, K, 2150, 10, 0);
+		tick(run, 3);
+		check("вход во второй чекпоинт: событие checkpoint_reached:cave:2 один раз", h.count("checkpoint_reached:cave:2") == 1);
+		check("вход: запомнены 2 ячейки", h.cellsSavedSizes.contains(2));
+		check("вход: действие при входе (волна cpwave) выполнено один раз", (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count() == waves + 1);
+		check("триггер миссии на вход сработал (custom:cp2)", h.count("custom:cp2") == 1);
+		tick(run, 3);
+		check("повторный тик в чекпоинте не повторяет вход", h.count("checkpoint_reached:cave:2") == 1);
+		h.log.clear();
+		run.onDeath(K);
+		check("гибель Кроша: событие checkpoint_reset:cave:2, custom:cp2_reset", h.count("checkpoint_reset:cave:2") == 1 && h.count("custom:cp2_reset") == 1);
+		check("откат: ячейки второго чекпоинта (снимок после входа) возвращены после блоков", h.cellsRestored.size() == 1 && h.cellsRestored.getFirst() == h.cellSaves);
+		int ri = h.log.indexOf("resetBlocks"), ci = h.log.indexOf("restoreCells " + h.cellsRestored.getFirst());
+		check("порядок: сначала блоки версии, потом ячейки", ri >= 0 && ci > ri);
+		h.cellsRestored.clear();
+		h.events.clear();
+		tick(run, 2);
+		run.onDeath(Y);
+		check("гибель Ёжика (чекпоинт 1): откат на чекпоинт 1 и ячейки начала миссии", h.count("checkpoint_reset:cave:1") == 1 && h.count("custom:cp1_reset") == 1 && h.cellsRestored.size() == 1);
+		// область видимости: чужое событие в триггере миссии — ошибка анализатора
+		LevelDefinition bad = edited(level -> {
+			var cave = missionJson(level, "cave");
+			if (!cave.has("triggers")) cave.add("triggers", new com.google.gson.JsonArray());
+			cave.getAsJsonArray("triggers").add(trigger("{\"when\":\"task_completed:k_take\",\"then\":{\"action\":\"fail_task\",\"task\":\"k_jungle\"}}"));
+			cave.getAsJsonArray("triggers").add(trigger("{\"when\":\"checkpoint_reached:cave:9\",\"then\":{\"action\":\"emit\",\"event\":\"x\"}}"));
+		});
+		var problems = com.smeshariki.level.definition.LevelAnalyzer.analyze(bad, id -> 0, 2).problems();
+		System.out.println("      проблемы: " + problems.stream().filter(pr -> pr.startsWith("триггер миссии")).toList());
+		check("анализатор: чужая задача в событии, чужая задача в действии, нет такого чекпоинта", problems.stream().filter(pr -> pr.startsWith("триггер миссии")).count() == 3);
+		var good = com.smeshariki.level.definition.LevelAnalyzer.analyze(def, id -> 0, 2).problems();
+		check("анализатор: правильные события и ячейки ошибок области видимости не дают", good.stream().noneMatch(pr -> pr.startsWith("триггер миссии") || pr.startsWith("ячейка")));
+	}
+
 	public static void main(String[] args) throws Exception {
 		SharedConstants.tryDetectVersion();
 		Bootstrap.bootStrap();
@@ -591,9 +740,10 @@ public final class Sim {
 				System.out.println("init " + name + " ПРОПУЩЕН: " + t);
 			}
 		});
+		LEVEL_FILE = args[0];
 		LevelDefinition def = load(args[0]);
 		System.out.println("уровень разобран: " + def.missions().size() + " миссий, триггеров " + def.triggers().size());
-		Runnable[] all = {() -> scenario1(def), () -> scenario2(def), () -> scenario3(def), () -> scenario4(def), () -> scenario5(def), () -> scenario6(def), () -> scenario7(def), () -> scenario8(def), () -> scenario9(def), () -> scenario10(def), () -> { try { scenario11(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> { try { scenario12(def); } catch (Exception e) { throw new RuntimeException(e); } }};
+		Runnable[] all = {() -> scenario1(def), () -> scenario2(def), () -> scenario3(def), () -> scenario4(def), () -> scenario5(def), () -> scenario6(def), () -> scenario7(def), () -> scenario8(def), () -> scenario9(def), () -> scenario10(def), () -> { try { scenario11(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> { try { scenario12(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> { try { scenario13(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> scenario14(def), () -> { try { scenario15(def); } catch (Exception e) { throw new RuntimeException(e); } }};
 		int i = 0;
 		for (Runnable s : all) {
 			i++;

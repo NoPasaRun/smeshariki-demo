@@ -1,0 +1,124 @@
+[22:48:18] [main/INFO]: [STDOUT]: init GameplayMechanics ok
+[22:48:18] [main/INFO]: [STDOUT]: init LevelConditions ok
+[22:48:18] [main/INFO]: [STDOUT]: уровень разобран: 5 миссий, триггеров 33
+[22:48:18] [Thread-0/INFO]: [STDOUT]: S1 сбор, старт, утренняя миссия на двоих
+[22:48:18] [Thread-0/INFO]: [STDOUT]:   ok   прогон идёт
+[22:48:18] [Thread-0/INFO]: [STDOUT]:   ok   роли закреплены
+[22:48:18] [Thread-0/INFO]: [STDOUT]:   ok   оба отправлены домой (по одному возврату)
+[22:48:18] [Thread-0/INFO]: [STDOUT]:   ok   текущая миссия — morning
+[22:48:18] [Thread-0/INFO]: [STDOUT]:   ok   нет напарников (оба игрока живые)
+[22:48:18] [Thread-0/INFO]: [STDOUT]:   ok   у Кроша одной задачи условий мало: k_take ещё нет (нет in_water)
+[22:48:18] [Thread-0/INFO]: [STDOUT]:   ok   k_take, k_water выполнены
+[22:48:18] [Thread-0/INFO]: [STDOUT]:   ok   y_ready выполнена
+[22:48:18] [Thread-0/INFO]: [STDOUT]:   ok   k_talk и y_talk (разговор) выполнены
+[22:48:18] [Thread-0/INFO]: [STDOUT]:   ok   необязательная y_tarzan не держит миссию: началась flight
+[22:48:18] [Thread-0/INFO]: [STDOUT]:   ok   одежда Ёжику в начале flight надета
+[22:48:18] [Thread-1/INFO]: [STDOUT]: S2 гибель одного во время полёта (оба у шара, верёвки ещё не взяты)
+[22:48:18] [Thread-1/INFO]: [STDOUT]:   ok   оба у шара: k_to_balloon, y_to_balloon
+[22:48:18] [Thread-1/INFO]: [STDOUT]:   ok   k_lift, y_helm идут
+[22:48:18] [Thread-1/INFO]: [STDOUT]:   ok   погибший Крош возвращён на чекпоинт ровно раз
+[22:48:18] [Thread-1/INFO]: [STDOUT]:   ok   Ёжик НЕ возвращён, его задачи целы
+[22:48:18] [Thread-1/INFO]: [STDOUT]:   ok   у Кроша k_to_balloon сохранена
+[22:48:18] [Thread-1/INFO]: [STDOUT]:   ok   Крошу назначено ожидание после сброса (3 с = 60 тиков)
+[22:48:18] [Thread-1/INFO]: [STDOUT]:   ok   после ожидания миссия возобновлена
+[22:48:18] [Thread-2/INFO]: [STDOUT]: S3 гибель в джунглях-перелёте: взаимный сброс k_jungle ⇄ y_jungle
+[22:48:18] [Thread-2/INFO]: [STDOUT]:   ok   k_jungle и y_jungle идут
+[22:48:18] [Thread-2/INFO]: [STDOUT]:       журнал: [return a -> 0,64,-200, wear b minecraft:stick, return b -> 0,64,-200, restoreSnapshot, resetBlocks, return a -> 50,64,50, return b -> 50,64,50, return a -> 50,64,50] события: [task_started:y_helm, checkpoint_reached:flight:2, checkpoint_reached:flight:2, task_completed:k_lift, task_started:k_jungle, task_completed:y_helm, task_started:y_jungle, task_reset:k_jungle, task_failed:y_jungle, task_reset:y_jungle, task_failed:k_jungle, task_reset:k_jungle, mission_reset:flight, checkpoint_reset:flight:2]
+[22:48:18] [Thread-2/INFO]: [STDOUT]:   ok   сброс закончился (нет бесконечного цикла), 2 мс
+[22:48:18] [Thread-2/INFO]: [STDOUT]:   ok   Ёжик тоже сброшен (вернулся на чекпоинт): возвратов 1
+[22:48:18] [Thread-2/INFO]: [STDOUT]:   ok   возвратов Кроша не лавина: 2
+[22:48:18] [Thread-2/INFO]: [STDOUT]:   ok   возвратов Ёжика не лавина: 1
+[22:48:18] [Thread-2/INFO]: [STDOUT]:   ok   task_reset:k_jungle / y_jungle по разу: 2/1
+[22:48:18] [Thread-2/INFO]: [STDOUT]:   ok   всего событий не взорвалось: 38
+[22:48:18] [Thread-3/INFO]: [STDOUT]: S4 закончил миссию раньше, погиб: стоит до конца миссии
+[22:48:18] [Thread-3/INFO]: [STDOUT]:   ok   k_jungle выполнена, y_jungle нет
+[22:48:18] [Thread-3/INFO]: [STDOUT]:   ok   Крош возвращён и стоит (hold)
+[22:48:18] [Thread-3/INFO]: [STDOUT]:   ok   Ёжик продолжает: не возвращён
+[22:48:18] [Thread-3/INFO]: [STDOUT]:   ok   миссия flight завершена
+[22:48:18] [Thread-3/INFO]: [STDOUT]:   ok   hold снят с Кроша
+[22:48:18] [Thread-3/INFO]: [STDOUT]:   ok   шар разрушен механикой после миссии
+[22:48:18] [Thread-4/INFO]: [STDOUT]: S5 Ёжик вышел из сети (offline) посреди миссии, потом вернулся
+[22:48:18] [Thread-4/INFO]: [STDOUT]:   ok   при Ёжике в оффлайне Крош доходит, миссия ждёт Ёжика
+[22:48:18] [Thread-4/INFO]: [STDOUT]:   ok   прогон не упал, время идёт
+[22:48:18] [Thread-4/INFO]: [STDOUT]:   ok   Ёжик вернулся и закончил: flight завершена
+[22:48:18] [Thread-5/INFO]: [STDOUT]: S6 пещера: гибель одного, чекпоинты, взаимный сброс k_cave ⇄ y_cave
+[22:48:18] [Thread-5/INFO]: [STDOUT]:   ok   jungle началась
+[22:48:18] [Thread-5/INFO]: [STDOUT]:   ok   оба достигли чекпоинта «пещера_старт» (idx 1)
+[22:48:18] [Thread-5/INFO]: [STDOUT]:   ok   погибший Ёжик вернулся на пещера_старт
+[22:48:18] [Thread-5/INFO]: [STDOUT]:   ok   началась cave или jungle завершена
+[22:48:18] [Thread-5/INFO]: [STDOUT]:       текущая миссия: cave
+[22:48:18] [Thread-5/INFO]: [STDOUT]:   ok   в cave после гибели Кроша сброшены обе k_cave и y_cave без лавины: возвратов K 2, Y 1
+[22:48:18] [Thread-6/INFO]: [STDOUT]: S7 до конца уровня на двоих
+[22:48:18] [Thread-6/INFO]: [STDOUT]:       миссия: cave
+[22:48:18] [Thread-6/INFO]: [STDOUT]:       миссия: chase
+[22:48:18] [Thread-6/INFO]: [STDOUT]:   ok   уровень завершён: COMPLETED
+[22:48:18] [Thread-6/INFO]: [STDOUT]:   ok   уровень завершён: оба вне hold
+[22:48:18] [Thread-7/INFO]: [STDOUT]: S8 бросили прогон: hold снимается, снимок возвращается
+[22:48:18] [Thread-7/INFO]: [STDOUT]:   ok   Крош в hold
+[22:48:18] [Thread-7/INFO]: [STDOUT]:   ok   после abandon hold снят
+[22:48:18] [Thread-7/INFO]: [STDOUT]:   ok   состояние ABANDONED
+[22:48:18] [Thread-8/INFO]: [STDOUT]: S9 игрок покинул прогон (removeParticipant) на середине: остался один
+[22:48:18] [Thread-8/INFO]: [STDOUT]:       миссия после ухода Ёжика: flight, y_jungle=false k_jungle=true
+[22:48:18] [Thread-8/INFO]: [STDOUT]:   ok   прогон жив после ухода участника
+[22:48:18] [Thread-8/INFO]: [STDOUT]:   ok   Крош доделал свои задачи
+[22:48:18] [Thread-9/INFO]: [STDOUT]: S10 оба погибли в одном тике на этапе джунглей
+[22:48:18] [Thread-9/INFO]: [STDOUT]:       возвратов K 3, Y 3, событий 12
+[22:48:18] [Thread-9/INFO]: [STDOUT]:   ok   оба возвращены, без лавины
+[22:48:18] [Thread-9/INFO]: [STDOUT]:   ok   задачи этапа снова идут
+[22:48:18] [Thread-10/INFO]: [STDOUT]: S11 откат подвижного к снимку чекпоинта того, кто сбросился (вариант A)
+[22:48:18] [Thread-10/INFO]: [STDOUT]:       снимков после старта flight: 1
+[22:48:18] [Thread-10/INFO]: [STDOUT]:   ok   снимок начала миссии сделан
+[22:48:18] [Thread-10/INFO]: [STDOUT]:       чекпоинт Кроша: StartPoint[dimension=ResourceKey[minecraft:dimension / minecraft:overworld], pos=(50.0, 64.0, 50.0)], миссия flight, чекпоинтов у роли: 3 всего 3
+[22:48:18] [Thread-10/INFO]: [STDOUT]:   ok   вход в чекпоинт «шар» сделал новые снимки (по одному на вошедшего): 2
+[22:48:18] [Thread-10/INFO]: [STDOUT]:       возвращены снимки: [2] (снимок начала 1, после чекпоинта 2..3)
+[22:48:18] [Thread-10/INFO]: [STDOUT]:   ok   после гибели Кроша возвращён снимок его чекпоинта, не начала миссии
+[22:48:18] [Thread-10/INFO]: [STDOUT]:       Ёжик не дошёл до чекпоинта: возвращены [1] (снимок начала 1)
+[22:48:18] [Thread-10/INFO]: [STDOUT]:   ok   игрок без чекпоинта получает снимок начала миссии
+[22:48:18] [Thread-10/INFO]: [STDOUT]:   ok   Крош (у чекпоинта) получает более поздний снимок, чем Ёжик
+[22:48:18] [Thread-11/INFO]: [STDOUT]: S12 принудительное завершение и пропуск миссии (без статистики)
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   до команды уровень идёт
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   гибель до команды: Крош в hold? нет (его задачи идут)
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   complete отказывает, если уровень не идёт (повторный вызов ниже)
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   forceComplete вернул true, состояние COMPLETED
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   прогон помечен принудительным
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   все задачи выполнены
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   level_completed разослан один раз
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   пропущенные миссии не запускали волны: нет mission_started:jungle/cave/chase
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   hold и напарники сняты
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   повторный forceComplete отказывает
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   принудительный прогон убран, а в статистику не попал
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   прогон без пометки в статистику идёт (контроль теста)
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   идёт flight
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   skip вернул true, flight завершена, началась jungle, прогон принудительный
+[22:48:18] [Thread-11/INFO]: [STDOUT]:   ok   после skip уровень идёт дальше нормально: текущая миссия jungle
+[22:48:18] [Thread-12/INFO]: [STDOUT]: S13 триггеры уровня переложены в миссии (миграция)
+[22:48:18] [Thread-12/INFO]: [STDOUT]:       триггеров в миссиях: {morning=0, flight=5, jungle=2, cave=7, chase=0}
+[22:48:18] [Thread-12/INFO]: [STDOUT]:   ok   morning без триггеров, flight 5, jungle 2, cave 7, chase 0
+[22:48:18] [Thread-12/INFO]: [STDOUT]:   ok   в уровне остался заставочный триггер level_started
+[22:48:18] [Thread-12/INFO]: [STDOUT]:   ok   волна лавы не осталась в уровне
+[22:48:18] [Thread-12/INFO]: [STDOUT]:   ok   цепочка волн (lava1→lava2→lava3) в cave
+[22:48:18] [Thread-12/INFO]: [STDOUT]:   ok   повторная миграция ничего не меняет
+[22:48:18] [Thread-12/INFO]: [STDOUT]:       проблемы анализатора: [миссия "flight": неизвестный приказ behaviormod:take_rope, миссия "flight": неизвестный приказ behaviormod:balloon_lift, миссия "flight": неизвестный приказ behaviormod:balloon_lift, миссия "flight": неизвестный приказ behaviormod:stop, миссия "flight": неизвестный приказ behaviormod:take_rope, миссия "flight": неизвестный приказ behaviormod:balloon_helm, миссия "flight": неизвестный приказ behaviormod:balloon_helm, миссия "flight": неизвестный приказ behaviormod:balloon_helm, миссия "flight": неизвестный приказ behaviormod:balloon_helm, миссия "flight": неизвестный приказ behaviormod:stop, миссия "flight": неизвестный приказ behaviormod:follow]
+[22:48:18] [Thread-12/INFO]: [STDOUT]:   ok   анализатор: нет ошибок области видимости
+[22:48:18] [Thread-13/INFO]: [STDOUT]: S14 события миссии работают только в её рамках (до начала и после конца — нет)
+[22:48:18] [Thread-13/INFO]: [STDOUT]:   ok   до начала миссии cave событие волны не запускает lava2
+[22:48:18] [Thread-13/INFO]: [STDOUT]:   ok   идёт cave
+[22:48:18] [Thread-13/INFO]: [STDOUT]:   ok   пока cave идёт, конец lava1 запускает lava2
+[22:48:18] [Thread-13/INFO]: [STDOUT]:   ok   после конца cave событие волны ничего не запускает
+[22:48:18] [Thread-13/INFO]: [STDOUT]:   ok   свой mission_completed доходит до триггера миссии (jungle выключил автобег)
+[22:48:18] [Thread-14/INFO]: [STDOUT]: S15 ячейки отката, действие при входе, события «вход в чекпоинт» и «откат на чекпоинт»
+[22:48:18] [Thread-14/INFO]: [STDOUT]:   ok   чекпоинт разобран: 2 ячейки и действие при входе
+[22:48:18] [Thread-14/INFO]: [STDOUT]:   ok   в начале cave запомнены ячейки первого чекпоинта (1 ячейка)
+[22:48:18] [Thread-14/INFO]: [STDOUT]:   ok   вход во второй чекпоинт: событие checkpoint_reached:cave:2 один раз
+[22:48:18] [Thread-14/INFO]: [STDOUT]:   ok   вход: запомнены 2 ячейки
+[22:48:18] [Thread-14/INFO]: [STDOUT]:   ok   вход: действие при входе (волна cpwave) выполнено один раз
+[22:48:18] [Thread-14/INFO]: [STDOUT]:   ok   триггер миссии на вход сработал (custom:cp2)
+[22:48:18] [Thread-14/INFO]: [STDOUT]:   ok   повторный тик в чекпоинте не повторяет вход
+[22:48:18] [Thread-14/INFO]: [STDOUT]:   ok   гибель Кроша: событие checkpoint_reset:cave:2, custom:cp2_reset
+[22:48:18] [Thread-14/INFO]: [STDOUT]:   ok   откат: ячейки второго чекпоинта (снимок после входа) возвращены после блоков
+[22:48:18] [Thread-14/INFO]: [STDOUT]:   ok   порядок: сначала блоки версии, потом ячейки
+[22:48:18] [Thread-14/INFO]: [STDOUT]:   ok   гибель Ёжика (чекпоинт 1): откат на чекпоинт 1 и ячейки начала миссии
+[22:48:18] [Thread-14/INFO]: [STDOUT]:       проблемы: [триггер миссии "cave": событие чужой задачи task_completed:k_take, триггер миссии "cave": действие над чужой задачей "k_jungle", триггер миссии "cave": нет такого чекпоинта: checkpoint_reached:cave:9]
+[22:48:18] [Thread-14/INFO]: [STDOUT]:   ok   анализатор: чужая задача в событии, чужая задача в действии, нет такого чекпоинта
+[22:48:18] [Thread-14/INFO]: [STDOUT]:   ok   анализатор: правильные события и ячейки ошибок области видимости не дают
+[22:48:18] [main/INFO]: [STDOUT]: ИТОГ: проверок 92, провалов 0
