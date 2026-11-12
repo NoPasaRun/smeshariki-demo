@@ -56,7 +56,8 @@ public final class Sim {
 		final Map<UUID, Integer> returns = new HashMap<>();
 		final Map<UUID, Vec3> lastReturn = new HashMap<>();
 		final Map<UUID, List<Integer>> freezes = new HashMap<>();
-		int publishes;
+		int publishes, snaps;
+		final List<Integer> restoredN = new ArrayList<>();
 
 		static String key(UUID p, Identifier id) {
 			return p.toString().substring(35) + "|" + id;
@@ -152,7 +153,9 @@ public final class Sim {
 
 		@Override
 		public @Nullable CompoundTag saveSnapshot(TaskArea area) {
-			return new CompoundTag();
+			CompoundTag tag = new CompoundTag();
+			tag.putInt("n", ++snaps);
+			return tag;
 		}
 
 		@Override
@@ -166,6 +169,7 @@ public final class Sim {
 
 		@Override
 		public void restoreSnapshot(ResourceKey<Level> dimension, CompoundTag snapshot) {
+			restoredN.add(snapshot.getIntOr("n", -1));
 			log.add("restoreSnapshot");
 		}
 
@@ -487,6 +491,43 @@ public final class Sim {
 		check("задачи этапа снова идут", run.isStarted(def.task("k_jungle")) || run.isStarted(def.task("k_lift")));
 	}
 
+	static void scenario11(LevelDefinition def) {
+		System.out.println("S11 откат подвижного к снимку чекпоинта того, кто сбросился (вариант A)");
+		Host h = new Host();
+		LevelRun run = start(def, h);
+		morning(run, h);
+		tick(run, 3);
+		int startN = h.snaps;
+		System.out.println("      снимков после старта flight: " + h.snaps);
+		check("снимок начала миссии сделан", startN >= 1);
+		toBalloon(run, h, false);
+		tick(run, 3);
+		System.out.println("      чекпоинт Кроша: " + run.checkpointPoint(K) + ", миссия " + (run.currentMission() == null ? "—" : run.currentMission().id()) + ", чекпоинтов у роли: " + run.currentMission().checkpointsFor(KROSH).size() + " всего " + run.currentMission().checkpoints().size());
+		int afterCheckpoint = h.snaps;
+		check("вход в чекпоинт «шар» сделал новые снимки (по одному на вошедшего): " + (afterCheckpoint - startN), afterCheckpoint > startN);
+		int kSnap = afterCheckpoint;
+		h.restoredN.clear();
+		run.onDeath(K);
+		System.out.println("      возвращены снимки: " + h.restoredN + " (снимок начала " + startN + ", после чекпоинта " + (startN + 1) + ".." + afterCheckpoint + ")");
+		check("после гибели Кроша возвращён снимок его чекпоинта, не начала миссии", !h.restoredN.isEmpty() && h.restoredN.getFirst() > startN);
+		// Ёжик тоже вошёл в чекпоинт (оба у шара): его снимок свой; убедимся, что игрок, не дошедший до чекпоинта, получает снимок начала
+		Host h2 = new Host();
+		LevelRun run2 = start(def, h2);
+		morning(run2, h2);
+		tick(run2, 3);
+		int start2 = h2.snaps;
+		at(h2, K, 50, 64, 50);
+		tick(run2, 3);
+		h2.restoredN.clear();
+		run2.onDeath(Y);
+		System.out.println("      Ёжик не дошёл до чекпоинта: возвращены " + h2.restoredN + " (снимок начала " + start2 + ")");
+		check("игрок без чекпоинта получает снимок начала миссии", !h2.restoredN.isEmpty() && h2.restoredN.getFirst() == start2);
+		tick(run2, 2);
+		h2.restoredN.clear();
+		run2.onDeath(K);
+		check("Крош (у чекпоинта) получает более поздний снимок, чем Ёжик", !h2.restoredN.isEmpty() && h2.restoredN.getFirst() > start2);
+	}
+
 	public static void main(String[] args) throws Exception {
 		SharedConstants.tryDetectVersion();
 		Bootstrap.bootStrap();
@@ -503,7 +544,7 @@ public final class Sim {
 		});
 		LevelDefinition def = load(args[0]);
 		System.out.println("уровень разобран: " + def.missions().size() + " миссий, триггеров " + def.triggers().size());
-		Runnable[] all = {() -> scenario1(def), () -> scenario2(def), () -> scenario3(def), () -> scenario4(def), () -> scenario5(def), () -> scenario6(def), () -> scenario7(def), () -> scenario8(def), () -> scenario9(def), () -> scenario10(def)};
+		Runnable[] all = {() -> scenario1(def), () -> scenario2(def), () -> scenario3(def), () -> scenario4(def), () -> scenario5(def), () -> scenario6(def), () -> scenario7(def), () -> scenario8(def), () -> scenario9(def), () -> scenario10(def), () -> scenario11(def)};
 		int i = 0;
 		for (Runnable s : all) {
 			i++;
