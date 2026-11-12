@@ -24,3 +24,9 @@ tasks.register('gitTest', JavaExec) {
 	mainClass = 'sim.GitTest'
 	jvmArgs '-Xmx500m'
 }
+
+tasks.register('realGit', JavaExec) {
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = 'sim.RealGit'
+	jvmArgs '-Xmx500m'
+}
