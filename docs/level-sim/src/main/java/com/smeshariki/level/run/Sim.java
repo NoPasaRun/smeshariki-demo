@@ -528,6 +528,55 @@ public final class Sim {
 		check("Крош (у чекпоинта) получает более поздний снимок, чем Ёжик", !h2.restoredN.isEmpty() && h2.restoredN.getFirst() > start2);
 	}
 
+	static void scenario12(LevelDefinition def) throws Exception {
+		System.out.println("S12 принудительное завершение и пропуск миссии (без статистики)");
+		Host h = new Host();
+		LevelRun run = start(def, h);
+		morning(run, h);
+		toBalloon(run, h, false);
+		check("до команды уровень идёт", run.state() == LevelRun.State.RUNNING && !run.forced());
+		run.onDeath(K);
+		check("гибель до команды: Крош в hold? нет (его задачи идут)", !h.held.contains(K));
+		check("complete отказывает, если уровень не идёт (повторный вызов ниже)", true);
+		boolean ok = run.forceComplete();
+		check("forceComplete вернул true, состояние COMPLETED", ok && run.state() == LevelRun.State.COMPLETED);
+		check("прогон помечен принудительным", run.forced());
+		check("все задачи выполнены", def.tasks().stream().allMatch(t -> run.isCompleted(t)));
+		check("level_completed разослан один раз", h.count("level_completed") == 1);
+		check("пропущенные миссии не запускали волны: нет mission_started:jungle/cave/chase", h.count("mission_started:jungle") == 0 && h.count("mission_started:cave") == 0 && h.count("mission_started:chase") == 0);
+		check("hold и напарники сняты", h.held.isEmpty());
+		check("повторный forceComplete отказывает", !run.forceComplete() && !run.skipMission());
+		// статистика
+		var c = LevelStore.class.getDeclaredConstructor();
+		c.setAccessible(true);
+		LevelStore store = c.newInstance();
+		var f = LevelStore.class.getDeclaredField("runs");
+		f.setAccessible(true);
+		@SuppressWarnings("unchecked") List<LevelRun> runs = (List<LevelRun>) f.get(store);
+		runs.add(run);
+		store.sweep();
+		check("принудительный прогон убран, а в статистику не попал", runs.isEmpty() && store.statsOf(run.level()).runs() == 0);
+		// обычное завершение для сравнения попадает в статистику
+		Host h2 = new Host();
+		LevelRun normal = start(def, h2);
+		normal.forceComplete();
+		var fr = LevelRun.class.getDeclaredField("forced");
+		fr.setAccessible(true);
+		fr.setBoolean(normal, false);
+		runs.add(normal);
+		tick(normal, 1);
+		store.sweep();
+		check("прогон без пометки в статистику идёт (контроль теста)", store.statsOf(normal.level()).runs() == 1);
+		// skip
+		Host h3 = new Host();
+		LevelRun r3 = start(def, h3);
+		morning(r3, h3);
+		check("идёт flight", r3.currentMission() != null && r3.currentMission().id().equals("flight"));
+		boolean skipped = r3.skipMission();
+		check("skip вернул true, flight завершена, началась jungle, прогон принудительный", skipped && h3.count("mission_completed:flight") == 1 && h3.count("mission_started:jungle") == 1 && r3.forced() && r3.state() == LevelRun.State.RUNNING);
+		check("после skip уровень идёт дальше нормально: текущая миссия jungle", r3.currentMission() != null && r3.currentMission().id().equals("jungle"));
+	}
+
 	public static void main(String[] args) throws Exception {
 		SharedConstants.tryDetectVersion();
 		Bootstrap.bootStrap();
@@ -544,7 +593,7 @@ public final class Sim {
 		});
 		LevelDefinition def = load(args[0]);
 		System.out.println("уровень разобран: " + def.missions().size() + " миссий, триггеров " + def.triggers().size());
-		Runnable[] all = {() -> scenario1(def), () -> scenario2(def), () -> scenario3(def), () -> scenario4(def), () -> scenario5(def), () -> scenario6(def), () -> scenario7(def), () -> scenario8(def), () -> scenario9(def), () -> scenario10(def), () -> scenario11(def)};
+		Runnable[] all = {() -> scenario1(def), () -> scenario2(def), () -> scenario3(def), () -> scenario4(def), () -> scenario5(def), () -> scenario6(def), () -> scenario7(def), () -> scenario8(def), () -> scenario9(def), () -> scenario10(def), () -> { try { scenario11(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> { try { scenario12(def); } catch (Exception e) { throw new RuntimeException(e); } }};
 		int i = 0;
 		for (Runnable s : all) {
 			i++;
