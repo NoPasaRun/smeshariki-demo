@@ -1,0 +1,26 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+base { archivesName = "sim" }
+repositories { mavenCentral() }
+def modsDir = "/home/bogdan/.minecraft/mods/"
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	for (m in ["uilib", "gameplaymod", "managementmod", "worldmod", "behaviormod", "buildmod", "levelmod"]) implementation files(modsDir + m + "-1.0.0.jar")
+}
+tasks.withType(JavaCompile).configureEach { it.options.release = 25; it.options.encoding = "UTF-8" }
+java { sourceCompatibility = JavaVersion.VERSION_25; targetCompatibility = JavaVersion.VERSION_25 }
+tasks.register('simulate', JavaExec) {
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = 'com.smeshariki.level.run.Sim'
+	jvmArgs '-Xmx700m'
+	args project.findProperty('levelFile') ?: '/home/bogdan/Документы/IdeaProjects/SmesharikiProject/LevelMod/src/main/resources/data/levelmod/level/sandy_meadow.json'
+}
+
+tasks.register('gitTest', JavaExec) {
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = 'sim.GitTest'
+	jvmArgs '-Xmx500m'
+}

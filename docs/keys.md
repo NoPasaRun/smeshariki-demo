@@ -11,31 +11,35 @@
 | BuildMod | R, F, H, Tab, C, X, Z, U, I, Enter, Delete | поворот, отражение, полое, режим, копировать, вырезать, отмена, заливка, точка, готово, удалить платформу | строитель включён |
 | GameplayMod | `]` / `[` | удлинить / укоротить верёвку | верёвка в руках |
 | GameplayMod | Tab | ось руля шара | стропа руля в руках |
-| GameplayMod | O | описание механики предмета | предмет в руке (кнопка у правого края экрана) |
+| GameplayMod | I | описание механики предмета | предмет в руке (кнопка у правого края экрана) |
 | LevelMod | L | окно уровней | всегда; в выживании только «начать уровень» |
-| LevelMod | I | описание миссии («Подробнее») | идёт уровень |
+| LevelMod | U | описание миссии («Подробнее») | идёт уровень |
+| LevelMod | Y | показать/скрыть стрелку | всегда; то же кнопкой в окне «Подробнее» |
 | LevelMod | V | наблюдатель | пока ждёшь (после сброса задачи / закончил миссию раньше) |
 | ManagementMod | V | версии мира | только творческий режим, хост |
-| BehaviorMod | K | реплики напарнику | есть реплики |
+| BehaviorMod | J | реплики напарнику | есть реплики |
 | BehaviorMod | Backspace | пропустить кат-сцену | идёт сцена |
-| BehaviorMod (редактор кат-сцен) | P, ←/→, Home/End, Enter, Delete, PgUp/PgDn, N, R, T, Y, U, I, Tab, M, `,` `.`, `[` `]`, J, `=` `-`, B, O | пуск, шаг, начало/конец, ключ камеры, удалить, ключи, взгляд, запись камеры, реплика, звук, действие, свет, актёр, без звука, сдвиг клипа, обрезка, длина, масштаб, дубль, сохранить | открыт редактор |
+| BehaviorMod | N | режим управления кат-сценами (реестр: играть / править / удалить) | всегда, не во время сцены |
+| BehaviorMod (редактор кат-сцен) | P, `,` `.`, ←/→, Enter, Home/End, C, Delete, PgUp/PgDn, G, R, T, Y, U, I, Tab, M, `;` `'`, `[` `]`, J, `=` `-`, B, O, Shift+мышь, F1, Ctrl+Z/Y/C/V/A, X, H, V (дальность показа) | пуск, шаг по времени, инструмент (←/→) и его постановка (Enter), начало/конец, ключ камеры, удалить (в выделенной области — всё), ключи, взгляд из сцены, запись камеры, реплика, звук, действие, свет, актёр, без звука, сдвиг клипа, обрезка, длина, масштаб, дубль, сохранить, выделение области | открыт редактор |
 
 ## Пересечения с вашими текущими привязками (по `options.txt` + новые клавиши)
 
 | Клавиша | Кто занят |
 |---|---|
-| **I** | BuildMod `point`, BehaviorMod `edit_light`, LevelMod `mission_details` (новая), Iris «выбор шейдерпака», `key.debug.copyRecreateCommand` (F3) |
-| **O** | ваниль «Друзья» (`keyFriends`), BehaviorMod `edit_save`, GameplayMod `mechanics` (новая) |
+| **V** | ManagementMod `versions` (версии мира), BehaviorMod `edit_distance` (редактор кат-сцен — отдельный режим: клавиши игры в нём приглушены) |
+| **X** | BuildMod `cut` (вырезать), BehaviorMod `edit_along` (редактор кат-сцен — отдельный режим) |
+| **I** | BuildMod `point`, BehaviorMod `edit_light`, LevelMod `mechanics_info` (описание механики), Iris «выбор шейдерпака», `key.debug.copyRecreateCommand` (F3) |
+| **O** | ваниль «Друзья» (`keyFriends`), BehaviorMod `edit_save` (механика с 2026-11-10 переехала на I) |
 | **V** | BuildMod/ManagementMod версии, LevelMod наблюдатель, `key.debug.dumpVersion` (F3) |
 | **B** | BuildMod `toggle`, BehaviorMod `edit_take`, `key.debug.showHitboxes` (F3) |
 | **L** | ваниль «Достижения», LevelMod окно уровней (достижения гасятся), `key.debug.profiling` (F3) |
-| **K** | BehaviorMod `talk`, Iris «вкл/выкл шейдеры» |
-| **J** | BehaviorMod `edit_set_length`; в options.txt осталась старая `key.levelmod.details:j` (мёртвая) |
+| **K** | Iris «вкл/выкл шейдеры» |
+| **J** | BehaviorMod `reply` (реплики) и `edit_set_length` (редактор кат-сцен — отдельный режим); в options.txt осталась старая `key.levelmod.details:j` (мёртвая) |
 | **Tab** | ваниль «Список игроков», BuildMod `mode`, BehaviorMod `edit_actor`, GameplayMod `balloon_axis` |
 | **R** | BuildMod `rotate`, BehaviorMod `edit_record_camera`, Iris «перезагрузить» |
-| **U** | BuildMod `fill`, BehaviorMod `edit_action` |
+| **U** | BuildMod `fill`, BehaviorMod `edit_action`, LevelMod `mission_info` (описание миссии) |
 | **C / X / F / H** | BuildMod + ванильные «сохранить/загрузить панель», «поменять руки», подсказки F3 |
-| **N** | BehaviorMod `edit_look_through`, F3+N (spectate) |
+| **N** | BehaviorMod `scenes` (реестр сцен), F3+N (spectate) |
 | **← → Delete = −** | BuildMod ↔ BehaviorMod `edit_*` (редактор кат-сцен открывается отдельным режимом) |
 | **`[` `]`** | GameplayMod `rope_longer/shorter` ↔ BehaviorMod `edit_trim_*` |
 | **Space, T** | ваниль прыжок/чат ↔ BehaviorMod `edit_play`, `edit_line` |
