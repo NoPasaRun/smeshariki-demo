@@ -29,7 +29,7 @@
 ## Установка
 
 **Способ 1 (проще): через ManagementMod.**
-1. Установите Fabric для 26.2 и положите в папку `mods` два файла из [последнего релиза](https://github.com/OWNER/smeshariki-demo/releases/latest): `fabric-api-….jar` и `managementmod-1.0.0.jar`.
+1. Установите Fabric для 26.2 и положите в папку `mods` два файла из [последнего релиза](https://github.com/NoPasaRun/smeshariki-demo/releases/latest): `fabric-api-….jar` и `managementmod-1.0.0.jar`.
 2. Запустите игру: на экране заголовка появится окно «Установка с GitHub» со списком файлов. Нажмите «Скачать и установить» (моды — исполняемый код, ставьте только если доверяете источнику). Установятся остальные моды и мир «Ромашковая Долина». Репозиторий задан в `config/managementmod.json` (`gitRepo`, по умолчанию `NoPasaRun/smeshariki-demo`).
 3. Перезапустите игру.
 
