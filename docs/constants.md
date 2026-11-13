@@ -34,4 +34,4 @@
 ## Константы вне GameplayMod
 - **LevelMod:** `AREA_GRACE_TICKS` 200 (10 с на возвращение в область), `TAKE_RADIUS` 8, `START_RADIUS` 4, `SPECTATE_PAUSE` 40, `FADE_HOLD/OUT`, `WorldReset.BUDGET_NANOS` 6 мс, `BATCH` 48, `AreaReset.BUDGET_NANOS` 6 мс, `SYNC_INTERVAL` 10. Всё это — правила прохождения, а не мира.
 - **BuildMod:** лимит отмены 10, `MAX_MATERIALS`, `PaintSlots.KINDS`, число состояний крашеных блоков (замер: +0,8 с запуска и +14 МБ кучи на слот ступенек) — **риск роста времени старта**, если добавлять слоты.
-- **ManagementMod:** `MAX_FILES` 4096, `MAX_FILE_SIZE` 1 ГиБ, `TIMEOUT` 15 мин, `maxFileSizeMb` 512 (в конфиге).
+- **SmesharikiMod:** `MAX_FILES` 4096, `MAX_FILE_SIZE` 1 ГиБ, `TIMEOUT` 15 мин, `maxFileSizeMb` 512 (в конфиге).

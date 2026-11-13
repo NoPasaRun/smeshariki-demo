@@ -1,8 +1,12 @@
 /BehaviorMod/
 /BuildMod/
 /GameplayMod/
-/ManagementMod/
+/SmesharikiMod/
 /LevelMod/
 /SmesharikiWorldMod/
-/UiLib/
 /WorldMod/
+# служебное проверок docs/*: кэши Gradle, сборка, запуски игры и снимки
+docs/*/.gradle/
+docs/*/build/
+docs/*/run/
+docs/*/*.log

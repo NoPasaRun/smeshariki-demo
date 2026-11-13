@@ -3,9 +3,9 @@ package sim;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import com.managementmod.client.GitSession;
-import com.managementmod.client.SyncSession;
-import com.managementmod.sync.GitRelease;
+import com.smeshariki.mod.client.GitSession;
+import com.smeshariki.mod.client.SyncSession;
+import com.smeshariki.mod.sync.GitRelease;
 
 /** Установка из настоящего релиза на GitHub в пустую временную папку игры. */
 public final class RealGit {

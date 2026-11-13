@@ -47,13 +47,13 @@ public class SmokeTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
-		for (String id : new String[] {"uilib", "gameplaymod", "managementmod", "worldmod", "behaviormod", "buildmod", "levelmod"})
+		for (String id : new String[] {"gameplaymod", "smesharikimod", "worldmod", "behaviormod", "buildmod", "levelmod"})
 			if (!FabricLoader.getInstance().isModLoaded(id)) log("MOD MISSING " + id);
 		try (var world = context.worldBuilder().adjustSettings(st -> st.setGameMode(net.minecraft.client.gui.screens.worldselection.WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
 			context.waitTicks(60);
 			List<Case> cases = new ArrayList<>();
 			cases.addAll(com.buildmod.client.SmokeBuild.cases());
-			cases.addAll(com.managementmod.client.SmokeManagement.cases());
+			cases.addAll(com.smeshariki.mod.client.SmokeManagement.cases());
 			cases.addAll(com.smeshariki.behavior.client.SmokeBehavior.cases());
 			cases.addAll(com.smeshariki.level.client.SmokeLevel.cases());
 			// (ширина окна, высота окна, масштаб GUI, язык): 960x720 при масштабе 3 даёт минимальный GUI 320x240

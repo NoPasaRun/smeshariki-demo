@@ -1,1 +1,0 @@
-{"schemaVersion":1,"id":"smoke-test","version":"1","environment":"*","entrypoints":{"fabric-client-gametest":["smoke.SmokeTest"]},"depends":{"smoke":"*"}}

@@ -17,7 +17,7 @@ grep -E "(STDOUT|STDERR)\]: (S[0-9]|  ok|  FAIL|ИТОГ|      )|Exception" run.
 
 ## Установка с GitHub (`./gradlew gitTest`)
 
-Проверка `GitRelease` и `GitSession` ManagementMod на локальном HTTP-сервере, изображающем GitHub (`sim/GitTest.java`): нормальная установка jar и мира, замена
-старого файла (`.managementmod-old`), неверная сумма, zip-slip, переадресация на чужой узел, неверное имя репозитория, http не на localhost. Нужен свежий `managementmod-1.0.0.jar` в `~/.minecraft/mods`.
+Проверка `GitRelease` и `GitSession` SmesharikiMod на локальном HTTP-сервере, изображающем GitHub (`sim/GitTest.java`): нормальная установка jar и мира, замена
+старого файла (`.smesharikimod-old`), неверная сумма, zip-slip, переадресация на чужой узел, неверное имя репозитория, http не на localhost. Нужен свежий `smesharikimod-1.0.0.jar` в `~/.minecraft/mods`.
 
 `./gradlew realGit` ставит последний релиз `NoPasaRun/smeshariki-demo` с настоящего GitHub в пустую временную папку (сумма, мир, повторная проверка).

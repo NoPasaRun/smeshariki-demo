@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import com.managementmod.client.GitSession;
-import com.managementmod.sync.GitRelease;
+import com.smeshariki.mod.client.GitSession;
+import com.smeshariki.mod.sync.GitRelease;
 import com.sun.net.httpserver.HttpServer;
 
 public final class GitTest {
@@ -44,7 +44,7 @@ public final class GitTest {
 
 	static void run(GitSession s) throws Exception {
 		s.start();
-		for (int i = 0; i < 300 && s.state() != com.managementmod.client.SyncSession.State.DONE; i++) Thread.sleep(50);
+		for (int i = 0; i < 300 && s.state() != com.smeshariki.mod.client.SyncSession.State.DONE; i++) Thread.sleep(50);
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -91,13 +91,13 @@ public final class GitTest {
 			run(session);
 			System.out.println("ошибки: " + session.errors());
 			check("jar поставлен, содержимое новое", Files.readString(game.resolve("mods").resolve("levelmod-1.0.0.jar")).equals("JAR-CONTENT-v2"));
-			check("старый jar сохранён как .managementmod-old", Files.readString(game.resolve("mods").resolve("levelmod-1.0.0.jar.managementmod-old")).equals("OLD-JAR"));
-			check("устаревший мод отключён: переименован в .managementmod-old, не удалён", !Files.exists(game.resolve("mods/smesharikiworld-1.0.0.jar")) && Files.readString(game.resolve("mods/smesharikiworld-1.0.0.jar.managementmod-old")).equals("OLD-WORLD-MOD"));
+			check("старый jar сохранён как .smesharikimod-old", Files.readString(game.resolve("mods").resolve("levelmod-1.0.0.jar.smesharikimod-old")).equals("OLD-JAR"));
+			check("устаревший мод отключён: переименован в .smesharikimod-old, не удалён", !Files.exists(game.resolve("mods/smesharikiworld-1.0.0.jar")) && Files.readString(game.resolve("mods/smesharikiworld-1.0.0.jar.smesharikimod-old")).equals("OLD-WORLD-MOD"));
 			check("мир распакован в saves/Test World", Files.exists(game.resolve("saves/Test World/level.dat")) && Files.exists(game.resolve("saves/Test World/region/r.0.0.mca")));
 			check("файл с неверной суммой не поставлен", !Files.exists(game.resolve("mods/badsum.jar")) && session.errors().stream().anyMatch(e -> e.startsWith("badsum.jar")));
 			check("zip-slip отвергнут: ничего не вышло за saves", !Files.exists(game.resolve("evil.txt")) && !Files.exists(game.resolve("saves/evil.txt")) && !Files.exists(game.resolve("saves/Evil")) && session.errors().stream().anyMatch(e -> e.startsWith("evil.zip")));
-			check("временных папок и .part не осталось", Files.list(game.resolve("saves")).noneMatch(p -> p.getFileName().toString().startsWith(".managementmod")) && Files.list(game.resolve("mods")).noneMatch(p -> p.toString().endsWith(".managementmod-part")));
-			check("установлено 2 из 4, итог DONE", session.installed() == 2 && session.state() == com.managementmod.client.SyncSession.State.DONE);
+			check("временных папок и .part не осталось", Files.list(game.resolve("saves")).noneMatch(p -> p.getFileName().toString().startsWith(".smesharikimod")) && Files.list(game.resolve("mods")).noneMatch(p -> p.toString().endsWith(".smesharikimod-part")));
+			check("установлено 2 из 4, итог DONE", session.installed() == 2 && session.state() == com.smeshariki.mod.client.SyncSession.State.DONE);
 			GitRelease.Plan again = GitRelease.fetch(base, "o/r", game);
 			System.out.println("повторный план: " + again.entries().stream().map(e -> e.file().name()).toList());
 			check("повторная проверка: поставленное не предлагается (остались неудавшиеся)", again.entries().stream().noneMatch(e -> e.file().name().equals("levelmod-1.0.0.jar") || e.file().name().equals("world.zip")));

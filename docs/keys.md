@@ -16,7 +16,7 @@
 | LevelMod | U | описание миссии («Подробнее») | идёт уровень |
 | LevelMod | Y | показать/скрыть стрелку | всегда; то же кнопкой в окне «Подробнее» |
 | LevelMod | V | наблюдатель | пока ждёшь (после сброса задачи / закончил миссию раньше) |
-| ManagementMod | V | версии мира | только творческий режим, хост |
+| SmesharikiMod | V | версии мира | только творческий режим, хост |
 | BehaviorMod | J | реплики напарнику | есть реплики |
 | BehaviorMod | Backspace | пропустить кат-сцену | идёт сцена |
 | BehaviorMod | N | режим управления кат-сценами (реестр: играть / править / удалить) | всегда, не во время сцены |
@@ -26,11 +26,11 @@
 
 | Клавиша | Кто занят |
 |---|---|
-| **V** | ManagementMod `versions` (версии мира), BehaviorMod `edit_distance` (редактор кат-сцен — отдельный режим: клавиши игры в нём приглушены) |
+| **V** | SmesharikiMod `versions` (версии мира), BehaviorMod `edit_distance` (редактор кат-сцен — отдельный режим: клавиши игры в нём приглушены) |
 | **X** | BuildMod `cut` (вырезать), BehaviorMod `edit_along` (редактор кат-сцен — отдельный режим) |
 | **I** | BuildMod `point`, BehaviorMod `edit_light`, LevelMod `mechanics_info` (описание механики), Iris «выбор шейдерпака», `key.debug.copyRecreateCommand` (F3) |
 | **O** | ваниль «Друзья» (`keyFriends`), BehaviorMod `edit_save` (механика с 2026-11-10 переехала на I) |
-| **V** | BuildMod/ManagementMod версии, LevelMod наблюдатель, `key.debug.dumpVersion` (F3) |
+| **V** | BuildMod/SmesharikiMod версии, LevelMod наблюдатель, `key.debug.dumpVersion` (F3) |
 | **B** | BuildMod `toggle`, BehaviorMod `edit_take`, `key.debug.showHitboxes` (F3) |
 | **L** | ваниль «Достижения», LevelMod окно уровней (достижения гасятся), `key.debug.profiling` (F3) |
 | **K** | Iris «вкл/выкл шейдеры» |
