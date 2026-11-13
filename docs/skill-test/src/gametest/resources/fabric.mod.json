@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"skill-test","version":"1","environment":"*","entrypoints":{"fabric-client-gametest":["com.smeshariki.gameplay.client.SkillTest"]},"depends":{"skill":"*"}}

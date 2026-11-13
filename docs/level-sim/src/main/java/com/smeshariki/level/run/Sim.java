@@ -726,6 +726,43 @@ public final class Sim {
 		check("анализатор: правильные события и ячейки ошибок области видимости не дают", good.stream().noneMatch(pr -> pr.startsWith("триггер миссии") || pr.startsWith("ячейка")));
 	}
 
+
+	static int waves(Host h) {
+		return (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+	}
+
+	/** Проверка миссии cave собрана как в {@code LevelManager.test}: одна миссия, один игрок (Ёжик), старт с ожиданием. */
+	static void scenario16(LevelDefinition def) {
+		System.out.println("S16 проверка миссии cave: когда запускается lava1 при старте и после гибелей");
+		var cave = def.missions().stream().filter(m -> m.id().equals("cave")).findFirst().orElseThrow();
+		List<com.smeshariki.level.task.TaskEntry> alone = new java.util.ArrayList<>();
+		for (var e : cave.tasks()) alone.add(new com.smeshariki.level.task.TaskEntry(e.id(), e.title(), e.scope(), e.character(), List.of(), List.of(), 0, e.area(), e.optional(), e.task()));
+		var levelTriggers = def.triggers().stream().filter(t -> def.triggerOwner(t).isEmpty()).toList();
+		LevelDefinition d = new LevelDefinition(com.smeshariki.level.definition.LevelKind.STORY, cave.title(), Component.empty(), com.smeshariki.level.definition.LevelPreview.NONE, 1, 1, 0, java.util.Optional.empty(),
+				List.of(new com.smeshariki.level.task.MissionEntry(cave.id(), cave.title(), cave.description(), alone, cave.area(), cave.checkpoints(), cave.orders(), cave.gear(), cave.resetWait(), cave.guide(), cave.triggers())),
+				levelTriggers, def.characters(), Map.of(), def.watches()).expanded();
+		Host h = new Host();
+		LevelRun run = LevelRun.gather(Identifier.parse("levelmod:test/task"), d, h);
+		run.waitAtStart();
+		h.character.put(Y, YOZHIK);
+		at(h, Y, 2000, 64, 0);
+		run.addParticipant(Y, "Ёжик");
+		run.begin();
+		System.out.println("      старт: ожидание " + h.freezes + ", волн " + waves(h));
+		for (int attempt = 0; attempt < 4; attempt++) {
+			int w0 = waves(h);
+			tick(run, 100);
+			run.waitFinished(Y);
+			tick(run, 199);
+			int early = waves(h) - w0;
+			tick(run, 2);
+			int late = waves(h) - w0;
+			System.out.println("      попытка " + attempt + ": к 199-му тику после отсчёта волн " + early + ", к 201-му " + late);
+			check("попытка " + attempt + ": lava1 не раньше срока и ровно один раз", early == 0 && late == 1);
+			run.onDeath(Y);
+		}
+	}
+
 	public static void main(String[] args) throws Exception {
 		SharedConstants.tryDetectVersion();
 		Bootstrap.bootStrap();
@@ -743,7 +780,7 @@ public final class Sim {
 		LEVEL_FILE = args[0];
 		LevelDefinition def = load(args[0]);
 		System.out.println("уровень разобран: " + def.missions().size() + " миссий, триггеров " + def.triggers().size());
-		Runnable[] all = {() -> scenario1(def), () -> scenario2(def), () -> scenario3(def), () -> scenario4(def), () -> scenario5(def), () -> scenario6(def), () -> scenario7(def), () -> scenario8(def), () -> scenario9(def), () -> scenario10(def), () -> { try { scenario11(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> { try { scenario12(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> { try { scenario13(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> scenario14(def), () -> { try { scenario15(def); } catch (Exception e) { throw new RuntimeException(e); } }};
+		Runnable[] all = {() -> scenario1(def), () -> scenario2(def), () -> scenario3(def), () -> scenario4(def), () -> scenario5(def), () -> scenario6(def), () -> scenario7(def), () -> scenario8(def), () -> scenario9(def), () -> scenario10(def), () -> { try { scenario11(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> { try { scenario12(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> { try { scenario13(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> scenario14(def), () -> { try { scenario15(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> scenario16(def)};
 		int i = 0;
 		for (Runnable s : all) {
 			i++;
