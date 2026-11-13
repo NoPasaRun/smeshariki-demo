@@ -59,7 +59,7 @@ public final class GitTest {
 		String manifest = "{\"files\":[{\"name\":\"levelmod-1.0.0.jar\",\"category\":\"mod\",\"size\":" + jar.length + ",\"sha256\":\"" + sha(jar) + "\"},"
 				+ "{\"name\":\"world.zip\",\"category\":\"world\",\"world\":\"Test World\",\"size\":" + world.length + ",\"sha256\":\"" + sha(world) + "\"},"
 				+ "{\"name\":\"badsum.jar\",\"category\":\"mod\",\"size\":3,\"sha256\":\"" + "0".repeat(64) + "\"},"
-				+ "{\"name\":\"evil.zip\",\"category\":\"world\",\"world\":\"Evil\",\"size\":" + evil.length + ",\"sha256\":\"" + sha(evil) + "\"}]}";
+				+ "{\"name\":\"evil.zip\",\"category\":\"world\",\"world\":\"Evil\",\"size\":" + evil.length + ",\"sha256\":\"" + sha(evil) + "\"}],\"obsolete\":[\"smesharikiworld-1.0.0.jar\",\"installermod-1.0.0.jar\"]}";
 		HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
 		int port = server.getAddress().getPort();
 		String base = "http://127.0.0.1:" + port;
@@ -80,7 +80,9 @@ public final class GitTest {
 			Path game = Files.createTempDirectory("gitgame");
 			Files.createDirectories(game.resolve("mods"));
 			Files.writeString(game.resolve("mods").resolve("levelmod-1.0.0.jar"), "OLD-JAR");
+			Files.writeString(game.resolve("mods").resolve("smesharikiworld-1.0.0.jar"), "OLD-WORLD-MOD");
 			GitRelease.Plan plan = GitRelease.fetch(base, "o/r", game);
+			check("устаревший мод на диске найден, отсутствующий (installermod) игнорируется", plan.obsolete().equals(java.util.List.of("smesharikiworld-1.0.0.jar")));
 			System.out.println("план: " + plan.entries().stream().map(e -> e.file().name()).toList());
 			check("тег релиза прочитан", plan.tag().equals("v1"));
 			check("в плане все 4 файла (jar отличается, мира нет)", plan.entries().size() == 4);
@@ -90,6 +92,7 @@ public final class GitTest {
 			System.out.println("ошибки: " + session.errors());
 			check("jar поставлен, содержимое новое", Files.readString(game.resolve("mods").resolve("levelmod-1.0.0.jar")).equals("JAR-CONTENT-v2"));
 			check("старый jar сохранён как .managementmod-old", Files.readString(game.resolve("mods").resolve("levelmod-1.0.0.jar.managementmod-old")).equals("OLD-JAR"));
+			check("устаревший мод отключён: переименован в .managementmod-old, не удалён", !Files.exists(game.resolve("mods/smesharikiworld-1.0.0.jar")) && Files.readString(game.resolve("mods/smesharikiworld-1.0.0.jar.managementmod-old")).equals("OLD-WORLD-MOD"));
 			check("мир распакован в saves/Test World", Files.exists(game.resolve("saves/Test World/level.dat")) && Files.exists(game.resolve("saves/Test World/region/r.0.0.mca")));
 			check("файл с неверной суммой не поставлен", !Files.exists(game.resolve("mods/badsum.jar")) && session.errors().stream().anyMatch(e -> e.startsWith("badsum.jar")));
 			check("zip-slip отвергнут: ничего не вышло за saves", !Files.exists(game.resolve("evil.txt")) && !Files.exists(game.resolve("saves/evil.txt")) && !Files.exists(game.resolve("saves/Evil")) && session.errors().stream().anyMatch(e -> e.startsWith("evil.zip")));
@@ -98,6 +101,21 @@ public final class GitTest {
 			GitRelease.Plan again = GitRelease.fetch(base, "o/r", game);
 			System.out.println("повторный план: " + again.entries().stream().map(e -> e.file().name()).toList());
 			check("повторная проверка: поставленное не предлагается (остались неудавшиеся)", again.entries().stream().noneMatch(e -> e.file().name().equals("levelmod-1.0.0.jar") || e.file().name().equals("world.zip")));
+			GitRelease.Plan afterObsolete = GitRelease.fetch(base, "o/r", game);
+			check("после отключения устаревших повторно они не предлагаются", afterObsolete.obsolete().isEmpty());
+			// небезопасное имя в списке устаревших — манифест отвергнут
+			String evilManifest = "{\"files\":[],\"obsolete\":[\"../mods-evil.jar\"]}";
+			server.removeContext("/dl/manifest.json");
+			server.createContext("/dl/manifest.json", ex -> send(ex, evilManifest.getBytes(StandardCharsets.UTF_8)));
+			boolean evilObsolete = false;
+			try {
+				GitRelease.fetch(base, "o/r", Files.createTempDirectory("gitgame3"));
+			} catch (java.io.IOException e) {
+				evilObsolete = true;
+			}
+			check("небезопасное имя в списке устаревших отвергнуто", evilObsolete);
+			server.removeContext("/dl/manifest.json");
+			server.createContext("/dl/manifest.json", ex -> send(ex, manifest.getBytes(StandardCharsets.UTF_8)));
 			// чужой узел в переадресации
 			server.removeContext("/redir/");
 			server.createContext("/redir/", ex -> {
