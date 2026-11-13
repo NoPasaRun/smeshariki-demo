@@ -23,7 +23,7 @@ public final class RealGit {
 		try (var mods = Files.list(game.resolve("mods"))) {
 			System.out.println("mods: " + mods.map(p -> p.getFileName().toString()).sorted().toList());
 		}
-		System.out.println("мир: level.dat=" + Files.exists(game.resolve("saves/Ромашковая Долина/level.dat")) + " places=" + Files.exists(game.resolve("saves/Ромашковая Долина/levelmod_places.json")));
+		System.out.println("мир: level.dat=" + Files.exists(game.resolve("saves/Ромашковая Долина/level.dat")) + " places=" + Files.exists(game.resolve("saves/Ромашковая Долина/data/levelmod/places.json")));
 		GitRelease.Plan again = GitRelease.fetch("https://api.github.com", "NoPasaRun/smeshariki-demo", game);
 		System.out.println("повторная проверка: к установке " + again.entries().size());
 		System.exit(s.errors().isEmpty() && again.entries().isEmpty() ? 0 : 1);
