@@ -56,8 +56,13 @@ public final class GitTest {
 		files.put("world.zip", world);
 		files.put("badsum.jar", "BAD".getBytes());
 		files.put("evil.zip", evil);
+		byte[] st = "BLOOM=1.0".getBytes(StandardCharsets.UTF_8);
+		files.put("Pack.zip.txt", st);
+		files.put("Mine.zip.txt", st);
 		String manifest = "{\"files\":[{\"name\":\"levelmod-1.0.0.jar\",\"category\":\"mod\",\"size\":" + jar.length + ",\"sha256\":\"" + sha(jar) + "\"},"
 				+ "{\"name\":\"world.zip\",\"category\":\"world\",\"world\":\"Test World\",\"size\":" + world.length + ",\"sha256\":\"" + sha(world) + "\"},"
+				+ "{\"name\":\"Pack.zip.txt\",\"category\":\"shadersettings\",\"size\":" + st.length + ",\"sha256\":\"" + sha(st) + "\"},"
+				+ "{\"name\":\"Mine.zip.txt\",\"category\":\"shadersettings\",\"size\":" + st.length + ",\"sha256\":\"" + sha(st) + "\"},"
 				+ "{\"name\":\"badsum.jar\",\"category\":\"mod\",\"size\":3,\"sha256\":\"" + "0".repeat(64) + "\"},"
 				+ "{\"name\":\"evil.zip\",\"category\":\"world\",\"world\":\"Evil\",\"size\":" + evil.length + ",\"sha256\":\"" + sha(evil) + "\"}],\"obsolete\":[\"smesharikiworld-1.0.0.jar\",\"installermod-1.0.0.jar\"]}";
 		HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
@@ -81,11 +86,13 @@ public final class GitTest {
 			Files.createDirectories(game.resolve("mods"));
 			Files.writeString(game.resolve("mods").resolve("levelmod-1.0.0.jar"), "OLD-JAR");
 			Files.writeString(game.resolve("mods").resolve("smesharikiworld-1.0.0.jar"), "OLD-WORLD-MOD");
+			Files.createDirectories(game.resolve("shaderpacks"));
+			Files.writeString(game.resolve("shaderpacks").resolve("Mine.zip.txt"), "MY-OWN-SETTINGS");
 			GitRelease.Plan plan = GitRelease.fetch(base, "o/r", game);
 			check("устаревший мод на диске найден, отсутствующий (installermod) игнорируется", plan.obsolete().equals(java.util.List.of("smesharikiworld-1.0.0.jar")));
 			System.out.println("план: " + plan.entries().stream().map(e -> e.file().name()).toList());
 			check("тег релиза прочитан", plan.tag().equals("v1"));
-			check("в плане все 4 файла (jar отличается, мира нет)", plan.entries().size() == 4);
+			check("в плане 5 файлов (jar отличается, мира нет, настройки шейдера Pack нет; свои настройки Mine не трогаем)", plan.entries().size() == 5 && plan.entries().stream().noneMatch(e -> e.file().name().equals("Mine.zip.txt")));
 			GitSession session = new GitSession(base, "o/r", plan, game);
 			check("замена отмечена как обновление", session.items().stream().anyMatch(i -> i.entry().name().equals("levelmod-1.0.0.jar") && i.isUpdate()));
 			run(session);
@@ -97,7 +104,8 @@ public final class GitTest {
 			check("файл с неверной суммой не поставлен", !Files.exists(game.resolve("mods/badsum.jar")) && session.errors().stream().anyMatch(e -> e.startsWith("badsum.jar")));
 			check("zip-slip отвергнут: ничего не вышло за saves", !Files.exists(game.resolve("evil.txt")) && !Files.exists(game.resolve("saves/evil.txt")) && !Files.exists(game.resolve("saves/Evil")) && session.errors().stream().anyMatch(e -> e.startsWith("evil.zip")));
 			check("временных папок и .part не осталось", Files.list(game.resolve("saves")).noneMatch(p -> p.getFileName().toString().startsWith(".smesharikimod")) && Files.list(game.resolve("mods")).noneMatch(p -> p.toString().endsWith(".smesharikimod-part")));
-			check("установлено 2 из 4, итог DONE", session.installed() == 2 && session.state() == com.smeshariki.mod.client.SyncSession.State.DONE);
+			check("настройки шейдера поставлены, чужие не затёрты", Files.readString(game.resolve("shaderpacks/Pack.zip.txt")).equals("BLOOM=1.0") && Files.readString(game.resolve("shaderpacks/Mine.zip.txt")).equals("MY-OWN-SETTINGS"));
+			check("установлено 3 из 5, итог DONE", session.installed() == 3 && session.state() == com.smeshariki.mod.client.SyncSession.State.DONE);
 			GitRelease.Plan again = GitRelease.fetch(base, "o/r", game);
 			System.out.println("повторный план: " + again.entries().stream().map(e -> e.file().name()).toList());
 			check("повторная проверка: поставленное не предлагается (остались неудавшиеся)", again.entries().stream().noneMatch(e -> e.file().name().equals("levelmod-1.0.0.jar") || e.file().name().equals("world.zip")));
@@ -127,7 +135,7 @@ public final class GitTest {
 			GitRelease.Plan p2 = GitRelease.fetch(base, "o/r", game2);
 			GitSession s2 = new GitSession(base, "o/r", p2, game2);
 			run(s2);
-			check("переадресация на чужой узел отвергнута, ничего не поставлено", s2.installed() == 0 && s2.errors().size() == 4 && !Files.exists(game2.resolve("mods/levelmod-1.0.0.jar")));
+			check("переадресация на чужой узел отвергнута, ничего не поставлено", s2.installed() == 0 && s2.errors().size() == 6 && !Files.exists(game2.resolve("mods/levelmod-1.0.0.jar")));
 			boolean badRepo = false;
 			try {
 				GitRelease.fetch(base, "../etc/passwd", game2);
