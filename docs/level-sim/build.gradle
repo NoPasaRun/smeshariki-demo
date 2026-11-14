@@ -3,7 +3,8 @@ plugins {
 }
 base { archivesName = "sim" }
 repositories { mavenCentral() }
-def modsDir = "/home/bogdan/.minecraft/mods/"
+// -PmodsDir=/папка/с/jar/ — проверить свежую сборку, не копируя её в игру
+def modsDir = project.findProperty("modsDir") ?: "/home/bogdan/.minecraft/mods/"
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"

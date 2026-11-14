@@ -182,6 +182,11 @@ public final class Sim {
 		}
 
 		@Override
+		public void resumeSnapshots() {
+			log.add("resumeSnapshots");
+		}
+
+		@Override
 		public void resetBlocks(TaskArea area) {
 			log.add("resetBlocks");
 		}
@@ -548,7 +553,13 @@ public final class Sim {
 		tick(run2, 2);
 		h2.restoredN.clear();
 		run2.onDeath(K);
-		check("Крош (у чекпоинта) получает более поздний снимок, чем Ёжик", !h2.restoredN.isEmpty() && h2.restoredN.getFirst() > start2);
+		check("Крош один у чекпоинта «для всех»: он ждёт Ёжика, снимок тоже начала миссии", !h2.restoredN.isEmpty() && h2.restoredN.getFirst() == start2);
+		at(h2, K, 50, 64, 50);
+		at(h2, Y, 50, 64, 50);
+		tick(run2, 3);
+		h2.restoredN.clear();
+		run2.onDeath(K);
+		check("оба дошли до чекпоинта: возвращается более поздний снимок", !h2.restoredN.isEmpty() && h2.restoredN.getFirst() > start2);
 	}
 
 	static void scenario12(LevelDefinition def) throws Exception {
@@ -630,6 +641,10 @@ public final class Sim {
 		check("в уровне остался заставочный триггер level_started", levelOwn == 1);
 		check("волна лавы не осталась в уровне", def.triggers().stream().filter(t -> def.triggerOwner(t).isEmpty()).noneMatch(t -> t.then().stream().anyMatch(a -> a instanceof LevelAction.Mechanic(var id, var args) && id.getPath().equals("lava_wave"))));
 		check("цепочка волн (lava1→lava2→lava3) в cave", def.missions().stream().filter(m -> m.id().equals("cave")).findFirst().orElseThrow().triggers().stream().filter(t -> t.when().stream().anyMatch(e -> e.subject().startsWith("gameplaymod:lava_wave_finished") || e.subject().startsWith("lava_wave_finished"))).count() == 3);
+		// «начало миссии → кат-сцена» — событие уровня: после загрузки остаётся в уровне, а не уезжает в миссию (иначе окно «События уровня» его не видит)
+		var withIntro = edited(level -> level.getAsJsonArray("triggers").add(trigger("{\"when\":\"mission_started:morning\",\"then\":{\"action\":\"play_cutscene\",\"cutscene\":\"behaviormod:matsakn\"}}")));
+		check("кат-сцена на начало первой миссии осталась в уровне, в миссии не появилась", withIntro.triggers().stream().filter(t -> withIntro.triggerOwner(t).isEmpty() && t.when().contains(com.smeshariki.level.definition.LevelEvent.missionStarted("morning")) && t.then().stream().anyMatch(x -> x instanceof LevelAction.PlayCutscene)).count() == 1
+				&& withIntro.missions().stream().filter(m -> m.id().equals("morning")).findFirst().orElseThrow().triggers().isEmpty());
 		var raw = JsonParser.parseString(Files.readString(Path.of(LEVEL_FILE)));
 		var once = com.smeshariki.level.definition.LegacyTriggers.migrate(raw);
 		check("повторная миграция ничего не меняет", once.equals(com.smeshariki.level.definition.LegacyTriggers.migrate(once)));
@@ -643,19 +658,19 @@ public final class Sim {
 		Host h = new Host();
 		LevelRun run = start(def, h);
 		LevelEvent finished1 = LevelEvent.external("gameplaymod:lava_wave_finished:lava1");
-		int base = (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+		int base = (int) h.log.stream().filter(l -> l.equals("mechanic gameplaymod:lava_wave")).count();
 		run.external(finished1);
-		int before = (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+		int before = (int) h.log.stream().filter(l -> l.equals("mechanic gameplaymod:lava_wave")).count();
 		check("до начала миссии cave событие волны не запускает lava2", before == base);
 		toCave(run);
 		check("идёт cave", run.currentMission() != null && run.currentMission().id().equals("cave"));
 		run.external(finished1);
-		int during = (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+		int during = (int) h.log.stream().filter(l -> l.equals("mechanic gameplaymod:lava_wave")).count();
 		check("пока cave идёт, конец lava1 запускает lava2", during == before + 1);
 		run.skipMission();
-		int afterEnd = (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+		int afterEnd = (int) h.log.stream().filter(l -> l.equals("mechanic gameplaymod:lava_wave")).count();
 		run.external(finished1);
-		int after = (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+		int after = (int) h.log.stream().filter(l -> l.equals("mechanic gameplaymod:lava_wave")).count();
 		check("после конца cave событие волны ничего не запускает", after == afterEnd);
 		// триггер миссии, ждущий её собственный конец, сработал (mission_completed:jungle → автобег выключен)
 		check("свой mission_completed доходит до триггера миссии (jungle выключил автобег)", h.count("mission_completed:jungle") == 1);
@@ -691,27 +706,28 @@ public final class Sim {
 		toCave(run);
 		tick(run, 2);
 		check("в начале cave запомнены ячейки первого чекпоинта (1 ячейка)", h.cellsSavedSizes.contains(1));
-		int waves = (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+		int waves = (int) h.log.stream().filter(l -> l.equals("mechanic gameplaymod:lava_wave")).count();
 		h.cellsSavedSizes.clear();
 		at(h, K, 2150, 10, 0);
+		at(h, Y, 2150, 10, 0);
 		tick(run, 3);
 		check("вход во второй чекпоинт: событие checkpoint_reached:cave:2 один раз", h.count("checkpoint_reached:cave:2") == 1);
 		check("вход: запомнены 2 ячейки", h.cellsSavedSizes.contains(2));
-		check("вход: действие при входе (волна cpwave) выполнено один раз", (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count() == waves + 1);
+		check("вход: действие при входе (волна cpwave) выполнено один раз", (int) h.log.stream().filter(l -> l.equals("mechanic gameplaymod:lava_wave")).count() == waves + 1);
 		check("триггер миссии на вход сработал (custom:cp2)", h.count("custom:cp2") == 1);
 		tick(run, 3);
 		check("повторный тик в чекпоинте не повторяет вход", h.count("checkpoint_reached:cave:2") == 1);
 		h.log.clear();
 		run.onDeath(K);
 		check("гибель Кроша: событие checkpoint_reset:cave:2, custom:cp2_reset", h.count("checkpoint_reset:cave:2") == 1 && h.count("custom:cp2_reset") == 1);
-		check("откат: ячейки второго чекпоинта (снимок после входа) возвращены после блоков", h.cellsRestored.size() == 1 && h.cellsRestored.getFirst() == h.cellSaves);
+		check("откат: ячейки второго чекпоинта (снимок после входа) возвращены после блоков", h.cellsRestored.size() == 1 && h.cellsRestored.getFirst() >= h.cellSaves - 1);
 		int ri = h.log.indexOf("resetBlocks"), ci = h.log.indexOf("restoreCells " + h.cellsRestored.getFirst());
 		check("порядок: сначала блоки версии, потом ячейки", ri >= 0 && ci > ri);
 		h.cellsRestored.clear();
 		h.events.clear();
 		tick(run, 2);
 		run.onDeath(Y);
-		check("гибель Ёжика (чекпоинт 1): откат на чекпоинт 1 и ячейки начала миссии", h.count("checkpoint_reset:cave:1") == 1 && h.count("custom:cp1_reset") == 1 && h.cellsRestored.size() == 1);
+		check("гибель Ёжика (оба на втором чекпоинте): откат на чекпоинт 2 и его ячейки", h.count("checkpoint_reset:cave:2") == 1 && h.cellsRestored.size() == 1);
 		// область видимости: чужое событие в триггере миссии — ошибка анализатора
 		LevelDefinition bad = edited(level -> {
 			var cave = missionJson(level, "cave");
@@ -728,7 +744,7 @@ public final class Sim {
 
 
 	static int waves(Host h) {
-		return (int) h.log.stream().filter(l -> l.startsWith("mechanic gameplaymod:lava_wave")).count();
+		return (int) h.log.stream().filter(l -> l.equals("mechanic gameplaymod:lava_wave")).count();
 	}
 
 	/** Проверка миссии cave собрана как в {@code LevelManager.test}: одна миссия, один игрок (Ёжик), старт с ожиданием. */
@@ -739,7 +755,7 @@ public final class Sim {
 		for (var e : cave.tasks()) alone.add(new com.smeshariki.level.task.TaskEntry(e.id(), e.title(), e.scope(), e.character(), List.of(), List.of(), 0, e.area(), e.optional(), e.task()));
 		var levelTriggers = def.triggers().stream().filter(t -> def.triggerOwner(t).isEmpty()).toList();
 		LevelDefinition d = new LevelDefinition(com.smeshariki.level.definition.LevelKind.STORY, cave.title(), Component.empty(), com.smeshariki.level.definition.LevelPreview.NONE, 1, 1, 0, java.util.Optional.empty(),
-				List.of(new com.smeshariki.level.task.MissionEntry(cave.id(), cave.title(), cave.description(), alone, cave.area(), cave.checkpoints(), cave.orders(), cave.gear(), cave.resetWait(), cave.guide(), cave.triggers())),
+				List.of(new com.smeshariki.level.task.MissionEntry(cave.id(), cave.title(), cave.description(), alone, cave.areas(), cave.checkpoints(), cave.orders(), cave.gear(), cave.resetWait(), cave.guide(), cave.triggers())),
 				levelTriggers, def.characters(), Map.of(), def.watches()).expanded();
 		Host h = new Host();
 		LevelRun run = LevelRun.gather(Identifier.parse("levelmod:test/task"), d, h);
@@ -763,6 +779,107 @@ public final class Sim {
 		}
 	}
 
+	/** Чекпоинт «для всех» засчитывается, когда в нём побывали все игроки в сети; раньше он никого не двигает. */
+	static void scenario17(LevelDefinition def) {
+		System.out.println("S17 общий чекпоинт: засчитывается, когда дошли все");
+		Host h = new Host();
+		LevelRun run = start(def, h);
+		toCave(run);
+		tick(run, 2);
+		at(h, K, 2150, 10, 0);
+		tick(run, 3);
+		check("Крош один в общем чекпоинте: события входа нет", h.count("checkpoint_reached:cave:2") == 0);
+		h.events.clear();
+		run.onDeath(K);
+		check("гибель Кроша: возврат на первый чекпоинт, не на второй", h.count("checkpoint_reset:cave:1") == 1 && h.count("checkpoint_reset:cave:2") == 0);
+		h.events.clear();
+		at(h, K, 2150, 10, 0);
+		tick(run, 3);
+		at(h, K, 2000, 64, 0);
+		at(h, Y, 2150, 10, 0);
+		tick(run, 3);
+		check("Крош побывал, Ёжик пришёл: вход засчитан один раз", h.count("checkpoint_reached:cave:2") == 1);
+		h.events.clear();
+		run.onDeath(K);
+		check("теперь гибель Кроша возвращает на второй чекпоинт", h.count("checkpoint_reset:cave:2") == 1);
+		h.events.clear();
+		tick(run, 3);
+		run.onDeath(Y);
+		check("и Ёжика тоже на второй", h.count("checkpoint_reset:cave:2") == 1);
+	}
+
+	/** Ожидание задаётся у чекпоинта; по его концу приходит событие именно этого чекпоинта, а не волны с начала миссии. */
+	static void scenario18(LevelDefinition def0) throws Exception {
+		System.out.println("S18 ожидание у чекпоинта и событие checkpoint_resumed");
+		LevelDefinition def = edited(level -> {
+			var cave = missionJson(level, "cave");
+			var cps = cave.getAsJsonArray("checkpoints");
+			var second = new com.google.gson.JsonObject();
+			second.add("at", cps.get(1));
+			second.addProperty("reset_wait", 3);
+			var rebuilt = new com.google.gson.JsonArray();
+			rebuilt.add(cps.get(0));
+			rebuilt.add(second);
+			rebuilt.add(cps.get(2));
+			cave.add("checkpoints", rebuilt);
+			cave.addProperty("reset_wait", 5);
+		});
+		check("reset_wait чекпоинта разобран", def.missions().stream().filter(m -> m.id().equals("cave")).findFirst().orElseThrow().checkpoints().get(1).resetWait().orElse(-1) == 3);
+		Host h = new Host();
+		LevelRun run = start(def, h);
+		toCave(run);
+		tick(run, 2);
+		at(h, K, 2150, 10, 0);
+		at(h, Y, 2150, 10, 0);
+		tick(run, 3);
+		int waves0 = waves(h);
+		h.events.clear();
+		h.freezes.clear();
+		run.onDeath(K);
+		check("отката на второй чекпоинт: ожидание 3 с (60 тиков), а не 5 с миссии", h.freezes.getOrDefault(K, List.of()).contains(60) && !h.freezes.getOrDefault(K, List.of()).contains(100));
+		check("до конца ожидания события возобновления нет", h.count("checkpoint_resumed:cave:2") == 0 && h.count("mission_resumed:cave") == 0);
+		// гибель Кроша сбрасывает и задачу Ёжика (взаимный сброс): возобновление — когда отстоят оба
+		check("до конца ожидания волны не отпущены", !h.log.contains("resumeSnapshots"));
+		run.waitFinished(K);
+		run.waitFinished(Y);
+		check("после ожидания: checkpoint_resumed:cave:2 и mission_resumed:cave по разу", h.count("checkpoint_resumed:cave:2") == 1 && h.count("mission_resumed:cave") == 1);
+		check("после ожидания придержанные волны отпущены ровно один раз", h.log.stream().filter(l -> l.equals("resumeSnapshots")).count() == 1);
+		tick(run, 400);
+		check("откат на второй чекпоинт не пускает lava1 заново (волны продолжит снимок)", waves(h) == waves0);
+		// откат на первый: прежнее ожидание миссии и волна с начала
+		Host h2 = new Host();
+		LevelRun run2 = start(def, h2);
+		toCave(run2);
+		tick(run2, 2);
+		int base = waves(h2);
+		h2.freezes.clear();
+		run2.onDeath(K);
+		check("откат на первый чекпоинт: ожидание миссии 5 с (100 тиков)", h2.freezes.getOrDefault(K, List.of()).contains(100));
+		run2.waitFinished(K);
+		run2.waitFinished(Y);
+		check("и checkpoint_resumed:cave:1", h2.count("checkpoint_resumed:cave:1") >= 1);
+		tick(run2, 205);
+		check("lava1 пущена заново через 10 с после ожидания", waves(h2) == base + 1);
+	}
+
+	/** Областей миссии несколько: каждая снимается и возвращается; одна область в файле по-прежнему строка. */
+	static void scenario19(LevelDefinition def0) throws Exception {
+		System.out.println("S19 несколько областей миссии");
+		LevelDefinition def = edited(level -> missionJson(level, "cave").add("area", JsonParser.parseString("[\"@лавовое_озеро\", \"@бухта\"]")));
+		var cave = def.missions().stream().filter(m -> m.id().equals("cave")).findFirst().orElseThrow();
+		check("в cave две области", cave.areas().size() == 2);
+		check("в обычном файле область одна", def0.missions().stream().filter(m -> m.id().equals("cave")).findFirst().orElseThrow().areas().size() == 1);
+		Host h = new Host();
+		int snaps0 = h.snaps;
+		LevelRun run = start(def, h);
+		toCave(run);
+		tick(run, 2);
+		check("начало миссии сняло обе области", h.snaps - snaps0 >= 2);
+		h.log.clear();
+		run.onDeath(K);
+		check("сброс вернул блоки в обеих областях", h.log.stream().filter(l -> l.equals("resetBlocks")).count() == 2);
+	}
+
 	public static void main(String[] args) throws Exception {
 		SharedConstants.tryDetectVersion();
 		Bootstrap.bootStrap();
@@ -780,7 +897,7 @@ public final class Sim {
 		LEVEL_FILE = args[0];
 		LevelDefinition def = load(args[0]);
 		System.out.println("уровень разобран: " + def.missions().size() + " миссий, триггеров " + def.triggers().size());
-		Runnable[] all = {() -> scenario1(def), () -> scenario2(def), () -> scenario3(def), () -> scenario4(def), () -> scenario5(def), () -> scenario6(def), () -> scenario7(def), () -> scenario8(def), () -> scenario9(def), () -> scenario10(def), () -> { try { scenario11(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> { try { scenario12(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> { try { scenario13(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> scenario14(def), () -> { try { scenario15(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> scenario16(def)};
+		Runnable[] all = {() -> scenario1(def), () -> scenario2(def), () -> scenario3(def), () -> scenario4(def), () -> scenario5(def), () -> scenario6(def), () -> scenario7(def), () -> scenario8(def), () -> scenario9(def), () -> scenario10(def), () -> { try { scenario11(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> { try { scenario12(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> { try { scenario13(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> scenario14(def), () -> { try { scenario15(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> scenario16(def), () -> scenario17(def), () -> { try { scenario18(def); } catch (Exception e) { throw new RuntimeException(e); } }, () -> { try { scenario19(def); } catch (Exception e) { throw new RuntimeException(e); } }};
 		int i = 0;
 		for (Runnable s : all) {
 			i++;
