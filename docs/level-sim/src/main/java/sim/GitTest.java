@@ -111,6 +111,19 @@ public final class GitTest {
 			check("повторная проверка: поставленное не предлагается (остались неудавшиеся)", again.entries().stream().noneMatch(e -> e.file().name().equals("levelmod-1.0.0.jar") || e.file().name().equals("world.zip")));
 			GitRelease.Plan afterObsolete = GitRelease.fetch(base, "o/r", game);
 			check("после отключения устаревших повторно они не предлагаются", afterObsolete.obsolete().isEmpty());
+			// мир можно не скачивать: отказ от мира не трогает остальное
+			Path game3 = Files.createTempDirectory("gitgame3");
+			GitSession s3 = new GitSession(base, "o/r", GitRelease.fetch(base, "o/r", game3), game3);
+			check("по умолчанию мир выбран и входит в размер", s3.hasWorld() && s3.worldSelected() && s3.selectedCount() == 6);
+			long withWorld = s3.totalBytes();
+			boolean[] remembered = {true};
+			s3.onWorldChoice(sel -> remembered[0] = sel);
+			s3.setWorldSelected(false);
+			check("без мира: 4 файла из 6, размер меньше на оба архива мира", s3.selectedCount() == 4 && s3.totalBytes() == withWorld - world.length - evil.length);
+			run(s3);
+			check("отказ от мира передан на запоминание", !remembered[0]);
+			check("мир не скачан, остальное поставлено", !Files.exists(game3.resolve("saves")) && Files.exists(game3.resolve("mods/levelmod-1.0.0.jar")) && Files.exists(game3.resolve("shaderpacks/Pack.zip.txt")));
+			check("без мира: поставлено 3, ошибка только у файла с неверной суммой", s3.installed() == 3 && s3.errors().size() == 1 && s3.errors().get(0).startsWith("badsum.jar"));
 			// небезопасное имя в списке устаревших — манифест отвергнут
 			String evilManifest = "{\"files\":[],\"obsolete\":[\"../mods-evil.jar\"]}";
 			server.removeContext("/dl/manifest.json");
