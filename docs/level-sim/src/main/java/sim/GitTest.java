@@ -114,16 +114,26 @@ public final class GitTest {
 			// мир можно не скачивать: отказ от мира не трогает остальное
 			Path game3 = Files.createTempDirectory("gitgame3");
 			GitSession s3 = new GitSession(base, "o/r", GitRelease.fetch(base, "o/r", game3), game3);
-			check("по умолчанию мир выбран и входит в размер", s3.hasWorld() && s3.worldSelected() && s3.selectedCount() == 6);
+			check("по умолчанию все разделы включены, мир входит в размер", s3.sections().contains(com.smeshariki.mod.client.GitSection.WORLD) && s3.sectionSelected(com.smeshariki.mod.client.GitSection.WORLD) && s3.selectedCount() == 6);
+			check("разделы: только те, что есть в плане, по порядку Мир, Моды, Ресурспаки, Шейдерпаки", s3.sections().equals(java.util.Arrays.stream(com.smeshariki.mod.client.GitSection.values()).filter(sec -> s3.items().stream().anyMatch(i -> com.smeshariki.mod.client.GitSection.of(i.entry().category()) == sec)).toList()));
 			long withWorld = s3.totalBytes();
-			boolean[] remembered = {true};
-			s3.onWorldChoice(sel -> remembered[0] = sel);
-			s3.setWorldSelected(false);
+			java.util.Set<com.smeshariki.mod.client.GitSection> remembered = new java.util.HashSet<>();
+			s3.onChoice(remembered::addAll);
+			s3.setSectionSelected(com.smeshariki.mod.client.GitSection.WORLD, false);
 			check("без мира: 4 файла из 6, размер меньше на оба архива мира", s3.selectedCount() == 4 && s3.totalBytes() == withWorld - world.length - evil.length);
+			s3.setSectionSelected(com.smeshariki.mod.client.GitSection.MODS, false);
+			check("без мира и модов: шейдерпаки только", s3.items().stream().filter(s3::isSelected).allMatch(i -> com.smeshariki.mod.client.GitSection.of(i.entry().category()) == com.smeshariki.mod.client.GitSection.SHADER_PACKS));
+			s3.setSectionSelected(com.smeshariki.mod.client.GitSection.MODS, true);
 			run(s3);
-			check("отказ от мира передан на запоминание", !remembered[0]);
+			check("выключенные разделы переданы на запоминание (только мир)", remembered.equals(java.util.Set.of(com.smeshariki.mod.client.GitSection.WORLD)));
 			check("мир не скачан, остальное поставлено", !Files.exists(game3.resolve("saves")) && Files.exists(game3.resolve("mods/levelmod-1.0.0.jar")) && Files.exists(game3.resolve("shaderpacks/Pack.zip.txt")));
 			check("без мира: поставлено 3, ошибка только у файла с неверной суммой", s3.installed() == 3 && s3.errors().size() == 1 && s3.errors().get(0).startsWith("badsum.jar"));
+			// все разделы выключены: ставить нечего, кнопка неактивна
+			Path game4 = Files.createTempDirectory("gitgame4");
+			GitSession s4 = new GitSession(base, "o/r", GitRelease.fetch(base, "o/r", game4), game4);
+			s4.skip(java.util.EnumSet.allOf(com.smeshariki.mod.client.GitSection.class));
+			check("все разделы выключены: 0 файлов, «Скачать» неактивна", s4.selectedCount() == 0 && !s4.canStart());
+			check("сохранённые имена разделов читаются обратно", com.smeshariki.mod.client.GitSection.fromIds(com.smeshariki.mod.client.GitSection.ids(java.util.EnumSet.of(com.smeshariki.mod.client.GitSection.WORLD, com.smeshariki.mod.client.GitSection.SHADER_PACKS))).equals(java.util.EnumSet.of(com.smeshariki.mod.client.GitSection.WORLD, com.smeshariki.mod.client.GitSection.SHADER_PACKS)));
 			// небезопасное имя в списке устаревших — манифест отвергнут
 			String evilManifest = "{\"files\":[],\"obsolete\":[\"../mods-evil.jar\"]}";
 			server.removeContext("/dl/manifest.json");
@@ -166,8 +176,119 @@ public final class GitTest {
 		} finally {
 			server.stop(0);
 		}
+		worldUpdate();
 		System.out.println("ИТОГ: проверок " + checks + ", провалов " + failures);
 		System.exit(failures == 0 ? 0 : 1);
+	}
+
+	/** Релиз мира для проверки обновления: файлы мира (путь → содержимое), с {@code contents} или без. */
+	static String[] worldRelease(String tag, Map<String, String> worldFiles, boolean withContents, String extraRel) throws Exception {
+		Map<String, String> inZip = new java.util.TreeMap<>();
+		worldFiles.forEach((k, v) -> inZip.put("W/" + k, v));
+		byte[] z = zip(inZip);
+		StringBuilder c = new StringBuilder();
+		for (var e : new java.util.TreeMap<>(worldFiles).entrySet()) {
+			if (c.length() > 0) c.append(',');
+			byte[] d = e.getValue().getBytes(StandardCharsets.UTF_8);
+			c.append('"').append(e.getKey()).append("\":[").append(d.length).append(",\"").append(sha(d)).append("\"]");
+		}
+		if (extraRel != null) c.append(",\"").append(extraRel).append("\":[1,\"").append("0".repeat(64)).append("\"]");
+		String m = "{\"files\":[{\"name\":\"world.zip\",\"category\":\"world\",\"world\":\"W\",\"size\":" + z.length + ",\"sha256\":\"" + sha(z) + "\""
+				+ (withContents ? ",\"contents\":{" + c + "}" : "") + "}]}";
+		return new String[] {tag, m, java.util.Base64.getEncoder().encodeToString(z)};
+	}
+
+	/** Обновление установленного мира по файлам (WorldUpdate): правки игрока, правки релиза, резервные копии, рабочий мир автора. */
+	static void worldUpdate() throws Exception {
+		System.out.println("-- обновление установленного мира");
+		java.util.concurrent.atomic.AtomicReference<String[]> rel = new java.util.concurrent.atomic.AtomicReference<>();
+		HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+		String base = "http://127.0.0.1:" + server.getAddress().getPort();
+		server.createContext("/repos/o/r/releases/latest", ex -> send(ex, ("{\"tag_name\":\"" + rel.get()[0] + "\",\"assets\":[{\"name\":\"manifest.json\",\"browser_download_url\":\"" + base
+				+ "/m\"},{\"name\":\"world.zip\",\"browser_download_url\":\"" + base + "/z\"}]}").getBytes(StandardCharsets.UTF_8)));
+		server.createContext("/m", ex -> send(ex, rel.get()[1].getBytes(StandardCharsets.UTF_8)));
+		server.createContext("/z", ex -> send(ex, java.util.Base64.getDecoder().decode(rel.get()[2])));
+		server.start();
+		try {
+			Path game = Files.createTempDirectory("gitworld");
+			Path w = game.resolve("saves/W");
+			Map<String, String> v1 = new java.util.TreeMap<>(Map.of("level.dat", "L1", "region/a.mca", "A1", "region/b.mca", "B1", "data/x.json", "X1"));
+			rel.set(worldRelease("v1", v1, true, null));
+			var plan = GitRelease.fetch(base, "o/r", game);
+			check("мира нет: ставится целиком", plan.entries().size() == 1 && plan.entries().get(0).update() == null);
+			run(new GitSession(base, "o/r", plan, game));
+			check("мир поставлен, установленная версия запомнена", Files.readString(w.resolve("region/a.mca")).equals("A1") && Files.exists(game.resolve("data/smesharikimod/worlds/W.json")));
+			check("сразу после установки обновлять нечего", GitRelease.fetch(base, "o/r", game).entries().isEmpty());
+
+			Files.writeString(w.resolve("region/b.mca"), "B-PLAYER");
+			Files.createDirectories(w.resolve("players"));
+			Files.writeString(w.resolve("players/p.dat"), "ME");
+			check("правка игрока в файле, который релиз не менял, не считается обновлением", GitRelease.fetch(base, "o/r", game).entries().isEmpty());
+
+			Map<String, String> v2 = new java.util.TreeMap<>(v1);
+			v2.put("region/a.mca", "A2");
+			v2.put("data/y.json", "Y2");
+			rel.set(worldRelease("v2", v2, true, null));
+			plan = GitRelease.fetch(base, "o/r", game);
+			var up = plan.entries().isEmpty() ? null : plan.entries().get(0).update();
+			check("релиз изменил a и добавил y: обновятся только они", up != null && up.files().equals(java.util.List.of("data/y.json", "region/a.mca")) || up != null && new java.util.HashSet<>(up.files()).equals(java.util.Set.of("data/y.json", "region/a.mca")));
+			check("мир не рабочий (нет истории версий): раздел «Мир» включён", up != null && !up.authored() && new GitSession(base, "o/r", plan, game).sectionSelected(com.smeshariki.mod.client.GitSection.WORLD));
+			GitSession s = new GitSession(base, "o/r", plan, game);
+			run(s);
+			check("обновление без ошибок", s.errors().isEmpty() && s.installed() == 1);
+			check("a и y — из релиза, b игрока и его players/ на месте", Files.readString(w.resolve("region/a.mca")).equals("A2") && Files.readString(w.resolve("data/y.json")).equals("Y2")
+					&& Files.readString(w.resolve("region/b.mca")).equals("B-PLAYER") && Files.readString(w.resolve("players/p.dat")).equals("ME") && Files.readString(w.resolve("data/x.json")).equals("X1"));
+			Path backups = game.resolve("backups/smesharikimod");
+			Path b1;
+			try (var l = Files.list(backups)) {
+				b1 = l.findFirst().orElse(null);
+			}
+			check("прежний a лежит в резервной копии", b1 != null && Files.readString(b1.resolve("region/a.mca")).equals("A1"));
+			check("после обновления нечего обновлять, временных папок нет", GitRelease.fetch(base, "o/r", game).entries().isEmpty() && Files.list(game.resolve("saves")).noneMatch(p -> p.getFileName().toString().startsWith(".smesharikimod")));
+
+			Map<String, String> v3 = new java.util.TreeMap<>(v2);
+			v3.put("region/b.mca", "B3");
+			rel.set(worldRelease("v3", v3, true, null));
+			plan = GitRelease.fetch(base, "o/r", game);
+			check("релиз изменил b, который менял и игрок: обновится (релиз главнее)", plan.entries().size() == 1 && plan.entries().get(0).update().files().equals(java.util.List.of("region/b.mca")));
+			Thread.sleep(1100); // другая метка времени у папки резервной копии
+			run(new GitSession(base, "o/r", plan, game));
+			boolean playerBackup;
+			try (var l = Files.walk(backups)) {
+				playerBackup = l.filter(p -> p.endsWith("region/b.mca")).anyMatch(p -> {
+					try {
+						return Files.readString(p).equals("B-PLAYER");
+					} catch (java.io.IOException e) {
+						return false;
+					}
+				});
+			}
+			check("b игрока сохранён в резервной копии", Files.readString(w.resolve("region/b.mca")).equals("B3") && playerBackup);
+
+			Files.delete(game.resolve("data/smesharikimod/worlds/W.json"));
+			Files.writeString(w.resolve("level.dat"), "L-PLAYER");
+			plan = GitRelease.fetch(base, "o/r", game);
+			check("прошлую установку не помним: отличающийся файл предлагается, совпадающие — нет", plan.entries().size() == 1 && plan.entries().get(0).update().files().equals(java.util.List.of("level.dat")) && !plan.entries().get(0).update().known());
+
+			Files.createDirectories(w.resolve("data/smesharikimod/versions"));
+			plan = GitRelease.fetch(base, "o/r", game);
+			check("рабочий мир (своя история версий): обновление предлагается, но раздел «Мир» выключен", plan.entries().size() == 1 && plan.entries().get(0).update().authored()
+					&& !new GitSession(base, "o/r", plan, game).sectionSelected(com.smeshariki.mod.client.GitSection.WORLD));
+
+			rel.set(worldRelease("v0", v3, false, null));
+			check("старый релиз без списка файлов: установленный мир не трогается", GitRelease.fetch(base, "o/r", game).entries().isEmpty());
+
+			rel.set(worldRelease("evil", v3, true, "../../evil.txt"));
+			boolean evil = false;
+			try {
+				GitRelease.fetch(base, "o/r", game);
+			} catch (java.io.IOException e) {
+				evil = true;
+			}
+			check("путь с .. в списке файлов мира отвергнут", evil);
+		} finally {
+			server.stop(0);
+		}
 	}
 
 	static void send(com.sun.net.httpserver.HttpExchange ex, byte[] body) throws java.io.IOException {

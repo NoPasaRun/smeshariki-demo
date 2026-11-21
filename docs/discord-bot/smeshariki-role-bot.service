@@ -1,0 +1,20 @@
+[Unit]
+Description=Бот ролей Discord (Смешарики)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# поправьте путь и пользователя; токен лежит в /etc/smeshariki-role-bot.env (права 600), не в репозитории
+User=smeshariki
+WorkingDirectory=/opt/smeshariki-role-bot
+EnvironmentFile=/etc/smeshariki-role-bot.env
+ExecStart=/opt/smeshariki-role-bot/venv/bin/python bot.py run
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

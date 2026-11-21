@@ -1,0 +1,21 @@
+[Unit]
+Description=Админ-бот Telegram (управление ботом ролей Discord)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# работает от root: ему нужно перезапускать службу; список действий в коде фиксирован
+EnvironmentFile=/etc/smeshariki-alert.env
+EnvironmentFile=/etc/smeshariki-role-bot.env
+WorkingDirectory=/opt/smeshariki-role-bot
+ExecStart=/opt/smeshariki-role-bot/venv/bin/python /opt/smeshariki-role-bot/tgadmin.py
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/opt/smeshariki-role-bot
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

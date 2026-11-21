@@ -1,0 +1,64 @@
+[
+ {
+  "key": "roles",
+  "title": "Выбор ролей (сообщение с кнопками)",
+  "kind": "roles",
+  "channel": "1571189898252124333",
+  "message": "1571480708927586345",
+  "limit": 2000
+ },
+ {
+  "key": "rules",
+  "title": "Правила",
+  "kind": "message",
+  "channel": "1571166554450690249",
+  "message": "1571475468392206448",
+  "limit": 2000
+ },
+ {
+  "key": "install",
+  "title": "Как установить демо",
+  "kind": "message",
+  "channel": "1571454566149394462",
+  "message": "1571475462046228641",
+  "limit": 2000
+ },
+ {
+  "key": "bugs",
+  "title": "Шаблон баг-репорта",
+  "kind": "message",
+  "channel": "1571485364932313178",
+  "message": "1571485364932313178",
+  "limit": 2000
+ },
+ {
+  "key": "about",
+  "title": "Описание сервера",
+  "kind": "guild",
+  "limit": 300
+ },
+ {
+  "key": "about_project",
+  "title": "О проекте",
+  "kind": "message",
+  "channel": "1571189898252124333",
+  "message": "1571552284528214057",
+  "limit": 2000
+ },
+ {
+  "key": "faq",
+  "title": "Частые вопросы (FAQ)",
+  "kind": "message",
+  "channel": "1571454566149394462",
+  "message": "1571552289833885697",
+  "limit": 2000
+ },
+ {
+  "key": "roadmap",
+  "title": "Дорожная карта",
+  "kind": "message",
+  "channel": "1571189486618935468",
+  "message": "1571552294506598411",
+  "limit": 2000
+ }
+]

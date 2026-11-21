@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"raftpush","version":"1","environment":"*","depends":{"fabricloader":"*","minecraft":"*"}}

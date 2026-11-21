@@ -1,53 +1,61 @@
-[18:22:41] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: badsum.jar не поставлен
+[13:43:55] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: badsum.jar не поставлен
 java.io.IOException: контрольная сумма не совпала
-	at com.smeshariki.mod.client.GitSession.install(GitSession.java:185)
-	at com.smeshariki.mod.client.GitSession.run(GitSession.java:148)
+	at com.smeshariki.mod.client.GitSession.install(GitSession.java:284)
+	at com.smeshariki.mod.client.GitSession.run(GitSession.java:244)
 	at java.base/java.lang.Thread.run(Thread.java:1474)
-[18:22:41] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: evil.zip не поставлен
+[13:43:55] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: evil.zip не поставлен
 java.io.IOException: недопустимый путь в архиве: ../evil.txt
-	at com.smeshariki.mod.client.GitSession.unpackWorld(GitSession.java:215)
-	at com.smeshariki.mod.client.GitSession.install(GitSession.java:187)
-	at com.smeshariki.mod.client.GitSession.run(GitSession.java:148)
+	at com.smeshariki.mod.client.GitSession.unpack(GitSession.java:351)
+	at com.smeshariki.mod.client.GitSession.unpackWorld(GitSession.java:312)
+	at com.smeshariki.mod.client.GitSession.install(GitSession.java:287)
+	at com.smeshariki.mod.client.GitSession.run(GitSession.java:244)
 	at java.base/java.lang.Thread.run(Thread.java:1474)
-[18:22:41] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: levelmod-1.0.0.jar не поставлен
+[13:43:55] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: badsum.jar не поставлен
+java.io.IOException: контрольная сумма не совпала
+	at com.smeshariki.mod.client.GitSession.install(GitSession.java:284)
+	at com.smeshariki.mod.client.GitSession.run(GitSession.java:244)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+[13:43:55] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: levelmod-1.0.0.jar не поставлен
 java.io.IOException: адрес не разрешён: evil.example.com
-	at com.smeshariki.mod.sync.GitRelease.open(GitRelease.java:78)
-	at com.smeshariki.mod.sync.GitRelease.download(GitRelease.java:197)
-	at com.smeshariki.mod.client.GitSession.install(GitSession.java:184)
-	at com.smeshariki.mod.client.GitSession.run(GitSession.java:148)
+	at com.smeshariki.mod.sync.GitRelease.open(GitRelease.java:84)
+	at com.smeshariki.mod.sync.GitRelease.download(GitRelease.java:214)
+	at com.smeshariki.mod.client.GitSession.install(GitSession.java:283)
+	at com.smeshariki.mod.client.GitSession.run(GitSession.java:244)
 	at java.base/java.lang.Thread.run(Thread.java:1474)
-[18:22:41] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: world.zip не поставлен
+[13:43:55] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: world.zip не поставлен
 java.io.IOException: адрес не разрешён: evil.example.com
-	at com.smeshariki.mod.sync.GitRelease.open(GitRelease.java:78)
-	at com.smeshariki.mod.sync.GitRelease.download(GitRelease.java:197)
-	at com.smeshariki.mod.client.GitSession.install(GitSession.java:184)
-	at com.smeshariki.mod.client.GitSession.run(GitSession.java:148)
+	at com.smeshariki.mod.sync.GitRelease.open(GitRelease.java:84)
+	at com.smeshariki.mod.sync.GitRelease.download(GitRelease.java:214)
+	at com.smeshariki.mod.client.GitSession.install(GitSession.java:283)
+	at com.smeshariki.mod.client.GitSession.run(GitSession.java:244)
 	at java.base/java.lang.Thread.run(Thread.java:1474)
-[18:22:41] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: Pack.zip.txt не поставлен
+[13:43:55] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: Pack.zip.txt не поставлен
 java.io.IOException: адрес не разрешён: evil.example.com
-	at com.smeshariki.mod.sync.GitRelease.open(GitRelease.java:78)
-	at com.smeshariki.mod.sync.GitRelease.download(GitRelease.java:197)
-	at com.smeshariki.mod.client.GitSession.install(GitSession.java:184)
-	at com.smeshariki.mod.client.GitSession.run(GitSession.java:148)
+	at com.smeshariki.mod.sync.GitRelease.open(GitRelease.java:84)
+	at com.smeshariki.mod.sync.GitRelease.download(GitRelease.java:214)
+	at com.smeshariki.mod.client.GitSession.install(GitSession.java:283)
+	at com.smeshariki.mod.client.GitSession.run(GitSession.java:244)
 	at java.base/java.lang.Thread.run(Thread.java:1474)
-[18:22:41] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: Mine.zip.txt не поставлен
+[13:43:55] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: Mine.zip.txt не поставлен
 java.io.IOException: адрес не разрешён: evil.example.com
-	at com.smeshariki.mod.sync.GitRelease.open(GitRelease.java:78)
-	at com.smeshariki.mod.sync.GitRelease.download(GitRelease.java:197)
-	at com.smeshariki.mod.client.GitSession.install(GitSession.java:184)
-	at com.smeshariki.mod.client.GitSession.run(GitSession.java:148)
+	at com.smeshariki.mod.sync.GitRelease.open(GitRelease.java:84)
+	at com.smeshariki.mod.sync.GitRelease.download(GitRelease.java:214)
+	at com.smeshariki.mod.client.GitSession.install(GitSession.java:283)
+	at com.smeshariki.mod.client.GitSession.run(GitSession.java:244)
 	at java.base/java.lang.Thread.run(Thread.java:1474)
-[18:22:41] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: badsum.jar не поставлен
+[13:43:55] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: badsum.jar не поставлен
 java.io.IOException: адрес не разрешён: evil.example.com
-	at com.smeshariki.mod.sync.GitRelease.open(GitRelease.java:78)
-	at com.smeshariki.mod.sync.GitRelease.download(GitRelease.java:197)
-	at com.smeshariki.mod.client.GitSession.install(GitSession.java:184)
-	at com.smeshariki.mod.client.GitSession.run(GitSession.java:148)
+	at com.smeshariki.mod.sync.GitRelease.open(GitRelease.java:84)
+	at com.smeshariki.mod.sync.GitRelease.download(GitRelease.java:214)
+	at com.smeshariki.mod.client.GitSession.install(GitSession.java:283)
+	at com.smeshariki.mod.client.GitSession.run(GitSession.java:244)
 	at java.base/java.lang.Thread.run(Thread.java:1474)
-[18:22:41] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: evil.zip не поставлен
+[13:43:55] [SmesharikiMod-Git-Download/WARN]: Установка с GitHub: evil.zip не поставлен
 java.io.IOException: адрес не разрешён: evil.example.com
-	at com.smeshariki.mod.sync.GitRelease.open(GitRelease.java:78)
-	at com.smeshariki.mod.sync.GitRelease.download(GitRelease.java:197)
-	at com.smeshariki.mod.client.GitSession.install(GitSession.java:184)
-	at com.smeshariki.mod.client.GitSession.run(GitSession.java:148)
+	at com.smeshariki.mod.sync.GitRelease.open(GitRelease.java:84)
+	at com.smeshariki.mod.sync.GitRelease.download(GitRelease.java:214)
+	at com.smeshariki.mod.client.GitSession.install(GitSession.java:283)
+	at com.smeshariki.mod.client.GitSession.run(GitSession.java:244)
 	at java.base/java.lang.Thread.run(Thread.java:1474)
+[13:43:55] [SmesharikiMod-Git-Download/INFO]: Мир «W» обновлён из релиза v2: 2 файлов, прежние — в /tmp/gitworld3630528244318448488/backups/smesharikimod/W-v2-20261121-134355
+[13:43:57] [SmesharikiMod-Git-Download/INFO]: Мир «W» обновлён из релиза v3: 1 файлов, прежние — в /tmp/gitworld3630528244318448488/backups/smesharikimod/W-v3-20261121-134357

@@ -49,8 +49,25 @@ public class SmokeTest implements FabricClientGameTest {
 	public void runTest(ClientGameTestContext context) {
 		for (String id : new String[] {"gameplaymod", "smesharikimod", "worldmod", "behaviormod", "buildmod", "levelmod"})
 			if (!FabricLoader.getInstance().isModLoaded(id)) log("MOD MISSING " + id);
+		// SMOKE_SEED=<папка>: её содержимое кладётся в папку игры до создания мира (Gradle очищает папку запуска, подложить заранее нельзя)
+		String seed = System.getenv("SMOKE_SEED");
+		if (seed != null && !seed.isEmpty()) {
+			java.nio.file.Path from = java.nio.file.Path.of(seed), to = FabricLoader.getInstance().getGameDir();
+			try (var walk = java.nio.file.Files.walk(from)) {
+				for (java.nio.file.Path p : (Iterable<java.nio.file.Path>) walk::iterator) {
+					java.nio.file.Path t = to.resolve(from.relativize(p).toString());
+					if (java.nio.file.Files.isDirectory(p)) java.nio.file.Files.createDirectories(t);
+					else java.nio.file.Files.copy(p, t, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+				}
+				log("SEEDED " + from + " -> " + to);
+			} catch (java.io.IOException e) {
+				throw new RuntimeException("SMOKE_SEED", e);
+			}
+		}
 		try (var world = context.worldBuilder().adjustSettings(st -> st.setGameMode(net.minecraft.client.gui.screens.worldselection.WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
 			context.waitTicks(60);
+			com.smeshariki.behavior.client.SmokeBehavior.musicPack(context);
+			com.smeshariki.mod.client.SmokeManagement.enablePack(context);
 			List<Case> cases = new ArrayList<>();
 			cases.addAll(com.buildmod.client.SmokeBuild.cases());
 			cases.addAll(com.smeshariki.mod.client.SmokeManagement.cases());

@@ -1,0 +1,6 @@
+[Unit]
+Description=Проверка бота ролей и диска (уведомления в Telegram)
+
+[Service]
+Type=oneshot
+ExecStart=/opt/smeshariki-role-bot/watch.sh

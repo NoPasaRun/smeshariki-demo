@@ -1,0 +1,9 @@
+[Unit]
+Description=Проверка бота ролей и диска раз в 5 минут
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target
